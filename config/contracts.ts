@@ -1,0 +1,10 @@
+export const CONTRACTS = {
+    sepolia: {
+      ROUTER02: "0xEe56F7e1712Fa61d498d0A1E6934E354124CfE3",
+      FACTORY:  "0xF62c03E08ada871A0bEb309762E260a7a6a880E6",
+    },
+    mainnet: {
+      ROUTER02: "0x7a250d5630b4cF539739dF2C5dAcb4c659F2488D",
+      FACTORY:  "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f",
+    }
+  } as const;
