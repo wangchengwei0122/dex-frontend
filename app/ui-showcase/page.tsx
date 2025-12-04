@@ -13,7 +13,7 @@ const TokenButton = ({ label }: { label: string }) => (
   <AppButton
     variant="outline"
     size="sm"
-    className="rounded-xl bg-[#0A0A0C] text-[#C9A227] border border-[#C9A227]/70 px-3 py-1.5 shadow-[0_0_18px_rgba(201,162,39,0.12)] hover:bg-black/60"
+    className="rounded-full bg-[#0A0A0C] text-[#C9A227] border border-[#f5c76a80] px-4 py-2 text-[13px] shadow-[0_0_18px_rgba(201,162,39,0.12)] hover:bg-black/60"
   >
     {label}
   </AppButton>
@@ -172,11 +172,16 @@ export default function UIShowcasePage() {
           </div>
         </AppPanel>
 
-        <AppPanel variant="dark" className="space-y-5">
+        <AppPanel variant="dark" className="space-y-6">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <AppBadge variant="primary" className="text-sm font-medium">Swap</AppBadge>
-              <span className="text-[10px] uppercase tracking-[0.28em] text-zinc-500">Pro</span>
+            <div className="flex items-center gap-4">
+              <button className="relative pb-2 text-sm font-medium text-white hover:text-[#C9A227] transition hover:shadow-[0_0_14px_rgba(201,162,39,0.2)]">
+                Swap
+                <span className="absolute inset-x-0 -bottom-0.5 h-0.5 rounded-full bg-[#C9A227]" />
+              </button>
+              <button className="pb-2 text-sm font-medium text-white/60 hover:text-[#C9A227] transition hover:shadow-[0_0_14px_rgba(201,162,39,0.15)]">
+                Pro
+              </button>
             </div>
             <AppButton variant="ghost" size="sm" className="text-[#C9A227]">⚙️</AppButton>
           </div>
@@ -215,7 +220,13 @@ export default function UIShowcasePage() {
               <span>Slippage 0.30%</span>
             </div>
 
-            <AppButton variant="primary" className="w-full py-3 text-base shadow-[0_8px_32px_rgba(201,162,39,0.20)]">
+            <AppButton
+              variant="primary"
+              className="w-full py-3 text-base shadow-[0_12px_36px_rgba(201,162,39,0.24)] border border-transparent"
+              style={{
+                borderImage: "linear-gradient(120deg, rgba(201,162,39,0.85), rgba(201,162,39,0.25)) 1",
+              }}
+            >
               Swap with Gold Glow
             </AppButton>
           </div>

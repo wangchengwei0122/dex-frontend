@@ -2,6 +2,8 @@ export const GOLD_PRIMARY = "#C9A227"
 export const GOLD_PRIMARY_DARK = "#D4A017"
 export const GOLD_ACCENT = "#C9A227"
 export const GOLD_GLOW = "rgba(201,162,39,0.20)"
+export const GOLD_BORDER_SOFT = "#f5c76a3d"
+export const GOLD_BORDER_MED = "#f5c76a80"
 
 export const BLACK_STRONG = "#0A0A0C"
 export const BLACK_SOFT = "#0D0D0F"

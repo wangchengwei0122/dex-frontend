@@ -4,7 +4,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const appInputVariants = cva(
-  "rounded-xl border transition-all duration-200 ease-out bg-white/90 text-zinc-900 placeholder:text-zinc-400 backdrop-blur-lg shadow-[0_2px_10px_rgba(0,0,0,0.06)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,162,39,0.25)] focus-visible:ring-offset-2 focus-visible:ring-offset-white focus-visible:shadow-[0_2px_14px_rgba(0,0,0,0.12)]",
+  "rounded-xl border transition-all duration-200 ease-out bg-white/6 text-zinc-900 placeholder:text-zinc-400 backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.35),0_2px_10px_rgba(0,0,0,0.06)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,162,39,0.25)] focus-visible:ring-offset-2 focus-visible:ring-offset-white focus-visible:shadow-[inset_0_1px_0_rgba(255,255,255,0.45),0_2px_14px_rgba(0,0,0,0.12)]",
   {
     variants: {
       size: {

@@ -3,13 +3,13 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, 
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
-const appCardVariants = cva("rounded-2xl transition-all duration-200 backdrop-blur-xl text-zinc-900", {
+const appCardVariants = cva("rounded-3xl transition-all duration-200 backdrop-blur-xl text-zinc-900", {
   variants: {
     variant: {
-      default: "bg-white/90 border border-zinc-200/80 shadow-sm",
-      bordered: "bg-white/90 border border-[#C9A227]/40 shadow-[0_4px_20px_rgba(0,0,0,0.07)]",
-      elevated: "bg-white/95 border border-zinc-200/80 shadow-[0_12px_32px_rgba(15,23,42,0.12)]",
-      flat: "bg-white/75 border border-zinc-200/60 shadow-none",
+      default: "bg-white/90 border border-[#f5c76a3d] shadow-[0_8px_32px_rgba(0,0,0,0.08)]",
+      bordered: "bg-white/90 border border-[#f5c76a3d] shadow-[0_4px_20px_rgba(0,0,0,0.07)]",
+      elevated: "bg-white/95 border border-[#f5c76a3d] shadow-[0_12px_32px_rgba(0,0,0,0.12)]",
+      flat: "bg-white/75 border border-[#f5c76a3d] shadow-none",
     },
   },
   defaultVariants: {
