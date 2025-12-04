@@ -11,13 +11,13 @@ const AppFieldLabel = React.forwardRef<HTMLLabelElement, AppFieldLabelProps>(
       <label
         ref={ref}
         className={cn(
-          "text-xs font-medium text-muted-foreground block mb-1.5",
+          "mb-2 block text-xs font-semibold uppercase tracking-[0.08em] text-zinc-500",
           className
         )}
         {...props}
       >
         {children}
-        {required && <span className="text-red-500 ml-0.5">*</span>}
+        {required && <span className="ml-1 text-amber-400 align-middle">*</span>}
       </label>
     )
   }

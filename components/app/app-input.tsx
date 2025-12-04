@@ -4,17 +4,17 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const appInputVariants = cva(
-  "rounded-xl border transition-all duration-200 ease-out focus-visible:ring-2 focus-visible:ring-black/10 focus-visible:ring-offset-1 bg-white/60 dark:bg-white/5 backdrop-blur-sm",
+  "rounded-xl border transition-all duration-200 ease-out bg-white/85 text-zinc-900 placeholder:text-zinc-400 backdrop-blur-lg shadow-[inset_0_1px_0_rgba(255,255,255,0.6)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white",
   {
     variants: {
       size: {
-        sm: "h-9 px-3 text-sm",
+        sm: "h-10 px-3.5 text-sm",
         md: "h-11 px-4 text-base",
         lg: "h-12 px-5 text-base",
       },
       error: {
-        true: "border-red-400/50 bg-red-50/30 dark:bg-red-500/5 focus-visible:ring-red-400/20 focus-visible:border-red-400/70",
-        false: "border-black/5 hover:border-black/10 focus-visible:border-black/20",
+        true: "border-rose-400 bg-rose-50/60 text-rose-900 focus-visible:ring-rose-300/60 focus-visible:ring-offset-rose-50",
+        false: "border-zinc-200 hover:border-amber-200 focus-visible:border-amber-400",
       },
     },
     defaultVariants: {
@@ -33,7 +33,11 @@ const AppInput = React.forwardRef<HTMLInputElement, AppInputProps>(
     return (
       <Input
         ref={ref}
-        className={cn(appInputVariants({ size, error }), className)}
+        className={cn(
+          "disabled:cursor-not-allowed disabled:bg-white/60 disabled:text-zinc-400 disabled:border-zinc-200/70",
+          appInputVariants({ size, error }),
+          className
+        )}
         aria-invalid={error}
         {...props}
       />

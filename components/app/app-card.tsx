@@ -3,22 +3,19 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, 
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
-const appCardVariants = cva(
-  "rounded-2xl transition-all duration-200 backdrop-blur-sm",
-  {
-    variants: {
-      variant: {
-        default: "bg-white/70 dark:bg-white/5 border border-black/5 shadow-sm",
-        bordered: "bg-white/70 dark:bg-white/5 border-2 border-black/10 shadow-sm",
-        elevated: "bg-white/80 dark:bg-white/10 border border-black/5 shadow-md",
-        flat: "bg-white/60 dark:bg-white/5 border border-black/5 shadow-none",
-      },
+const appCardVariants = cva("rounded-2xl transition-all duration-200 backdrop-blur-xl text-zinc-900", {
+  variants: {
+    variant: {
+      default: "bg-white/90 border border-zinc-200/80 shadow-sm",
+      bordered: "bg-white/90 border border-amber-200/70 shadow-sm",
+      elevated: "bg-white/95 border border-zinc-200/80 shadow-[0_12px_32px_rgba(15,23,42,0.12)]",
+      flat: "bg-white/75 border border-zinc-200/60 shadow-none",
     },
-    defaultVariants: {
-      variant: "default",
-    },
-  }
-)
+  },
+  defaultVariants: {
+    variant: "default",
+  },
+})
 
 export interface AppCardProps extends CardProps, VariantProps<typeof appCardVariants> {}
 

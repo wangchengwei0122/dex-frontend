@@ -1,26 +1,41 @@
 import * as React from "react"
+import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
+import { PANEL_SHADOW } from "@/config/theme"
 
-export interface AppPanelProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: "default" | "bordered" | "elevated"
-}
+const panelVariants = cva("rounded-3xl p-6 transition-all duration-200 backdrop-blur-xl", {
+  variants: {
+    variant: {
+      dark: "bg-[#020617] text-zinc-50 border border-amber-400/40 shadow-[0_18px_45px_rgba(15,23,42,0.85)] ring-1 ring-amber-300/10",
+      light: "bg-white/90 text-zinc-900 border border-amber-200/60 shadow-[0_12px_32px_rgba(15,23,42,0.14)]",
+      glass: "bg-white/80 text-zinc-900 border border-zinc-200/70 shadow-sm",
+      subtle: "bg-white/70 text-zinc-900 border border-zinc-200/60 shadow-none",
+      default: "bg-[#020617] text-zinc-50 border border-amber-400/40 shadow-[0_18px_45px_rgba(15,23,42,0.85)] ring-1 ring-amber-300/10",
+      bordered: "bg-white/90 text-zinc-900 border border-amber-200/60 shadow-[0_12px_32px_rgba(15,23,42,0.14)]",
+      elevated: "bg-[#020617] text-zinc-50 border border-amber-400/50 shadow-[0_22px_55px_rgba(15,23,42,0.9)] ring-1 ring-amber-300/10",
+    },
+  },
+  defaultVariants: {
+    variant: "dark",
+  },
+})
+
+export interface AppPanelProps
+  extends React.HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof panelVariants> {}
 
 const AppPanel = React.forwardRef<HTMLDivElement, AppPanelProps>(
-  ({ className, variant = "default", children, ...props }, ref) => {
-    const variantClasses = {
-      default: "bg-white/70 dark:bg-white/5 border border-black/5 shadow-sm backdrop-blur-md",
-      bordered: "bg-white/70 dark:bg-white/5 border-2 border-black/10 shadow-sm backdrop-blur-md",
-      elevated: "bg-white/80 dark:bg-white/10 border border-black/5 shadow-md backdrop-blur-md",
-    }
+  ({ className, variant, children, ...props }, ref) => {
+    const resolvedVariant = variant ?? "dark"
+    const style = resolvedVariant === "dark" || resolvedVariant === "elevated" || resolvedVariant === "default"
+      ? { boxShadow: PANEL_SHADOW }
+      : undefined
 
     return (
       <div
         ref={ref}
-        className={cn(
-          "rounded-2xl p-4 transition-shadow duration-200",
-          variantClasses[variant],
-          className
-        )}
+        className={cn(panelVariants({ variant: resolvedVariant }), className)}
+        style={style}
         {...props}
       >
         {children}

@@ -3,21 +3,23 @@ import { Button, type ButtonProps } from "@/components/ui/button"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 import { Loader2 } from "lucide-react"
+import { GOLD_GLOW_SHADOW } from "@/config/theme"
 
 const appButtonVariants = cva(
-  "rounded-xl font-semibold transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/10 focus-visible:ring-offset-1",
+  "group inline-flex items-center justify-center gap-2 rounded-full font-semibold tracking-tight transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200/70 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-50 disabled:pointer-events-none disabled:opacity-60 border border-transparent shadow-sm",
   {
     variants: {
       variant: {
-        primary: "bg-[#111] dark:bg-[#1F1F1F] text-white hover:bg-[#1a1a1a] dark:hover:bg-[#2a2a2a] active:scale-[0.98]",
-        secondary: "bg-white/80 dark:bg-white/10 border border-black/5 text-foreground hover:bg-white/90 dark:hover:bg-white/15 active:scale-[0.98]",
-        ghost: "hover:bg-black/5 dark:hover:bg-white/10 active:bg-black/10 dark:active:bg-white/15",
-        danger: "bg-red-500/90 text-white hover:bg-red-500 active:scale-[0.98]",
+        primary: "bg-[#020617] text-zinc-50 shadow-[0_0_18px_rgba(250,204,21,0.35)] hover:bg-zinc-900 hover:border-amber-400/70 active:translate-y-[0.5px]",
+        secondary: "bg-amber-100 text-zinc-900 border border-amber-300/80 hover:bg-amber-200/90 hover:border-amber-400/60",
+        ghost: "bg-transparent text-amber-500 hover:bg-zinc-900/5 border-transparent",
+        outline: "bg-transparent text-amber-500 border border-amber-400/70 hover:bg-amber-50/40",
+        danger: "bg-rose-500 text-white border border-rose-500/80 hover:bg-rose-600",
       },
       size: {
-        sm: "h-9 px-3.5 text-sm",
-        md: "h-11 px-4 text-base",
-        lg: "h-12 px-5 text-base",
+        sm: "h-9 px-4 text-sm",
+        md: "h-11 px-5 text-base",
+        lg: "h-12 px-6 text-base",
       },
     },
     defaultVariants: {
@@ -40,9 +42,10 @@ const AppButton = React.forwardRef<HTMLButtonElement, AppButtonProps>(
         ref={ref}
         className={cn(appButtonVariants({ variant, size }), className)}
         disabled={disabled || loading}
+        style={variant === "primary" ? { boxShadow: GOLD_GLOW_SHADOW } : undefined}
         {...props}
       >
-        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin text-amber-200" />}
         {children}
       </Button>
     )

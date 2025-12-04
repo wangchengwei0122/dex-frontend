@@ -4,21 +4,21 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const appBadgeVariants = cva(
-  "rounded-md font-medium transition-colors duration-200",
+  "rounded-full font-semibold transition-all duration-200 tracking-tight",
   {
     variants: {
       variant: {
-        default: "bg-muted text-muted-foreground border-transparent",
-        primary: "bg-primary/10 text-primary border-transparent",
-        success: "bg-green-500/10 text-green-600 dark:text-green-400 border-transparent",
-        warning: "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-transparent",
-        error: "bg-destructive/10 text-destructive border-transparent",
-        outline: "border border-border text-foreground",
+        default: "bg-zinc-100 text-zinc-700 border border-zinc-200",
+        primary: "bg-zinc-950 text-amber-300 border border-amber-300/60 shadow-[0_0_12px_rgba(250,204,21,0.15)]",
+        success: "bg-emerald-50 text-emerald-700 border border-emerald-200",
+        warning: "bg-amber-50 text-amber-700 border border-amber-200",
+        error: "bg-rose-50 text-rose-700 border border-rose-200",
+        outline: "border border-amber-300/70 text-amber-500 bg-transparent",
       },
       size: {
-        sm: "h-5 px-1.5 text-xs",
-        md: "h-6 px-2 text-sm",
-        lg: "h-7 px-2.5 text-base",
+        sm: "h-6 px-2 text-[11px]",
+        md: "h-7 px-2.5 text-xs",
+        lg: "h-8 px-3 text-sm",
       },
     },
     defaultVariants: {
@@ -44,4 +44,3 @@ const AppBadge = React.forwardRef<HTMLSpanElement, AppBadgeProps>(
 AppBadge.displayName = "AppBadge"
 
 export { AppBadge, appBadgeVariants }
-
