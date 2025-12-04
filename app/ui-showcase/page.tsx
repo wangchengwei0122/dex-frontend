@@ -13,7 +13,7 @@ const TokenButton = ({ label }: { label: string }) => (
   <AppButton
     variant="outline"
     size="sm"
-    className="rounded-xl bg-[#0A0A0C] text-[#C9A227] border border-[#C9A227]/60 px-3 py-1.5 shadow-[0_0_18px_rgba(201,162,39,0.12)] hover:bg-black/60"
+    className="rounded-xl bg-[#0A0A0C] text-[#C9A227] border border-[#C9A227]/70 px-3 py-1.5 shadow-[0_0_18px_rgba(201,162,39,0.12)] hover:bg-black/60"
   >
     {label}
   </AppButton>
@@ -175,10 +175,10 @@ export default function UIShowcasePage() {
         <AppPanel variant="dark" className="space-y-5">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <AppBadge variant="primary">Swap</AppBadge>
-              <span className="text-xs uppercase tracking-[0.16em] text-amber-200/80">Pro</span>
+              <AppBadge variant="primary" className="text-sm font-medium">Swap</AppBadge>
+              <span className="text-[10px] uppercase tracking-[0.28em] text-zinc-500">Pro</span>
             </div>
-            <AppButton variant="ghost" size="sm" className="text-amber-300">⚙️</AppButton>
+            <AppButton variant="ghost" size="sm" className="text-[#C9A227]">⚙️</AppButton>
           </div>
 
           <div className="space-y-4">
@@ -215,7 +215,7 @@ export default function UIShowcasePage() {
               <span>Slippage 0.30%</span>
             </div>
 
-            <AppButton variant="primary" className="w-full py-3 text-base shadow-[0_0_32px_rgba(201,162,39,0.18)]">
+            <AppButton variant="primary" className="w-full py-3 text-base shadow-[0_8px_32px_rgba(201,162,39,0.20)]">
               Swap with Gold Glow
             </AppButton>
           </div>
