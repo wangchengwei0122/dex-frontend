@@ -13,7 +13,7 @@ const TokenButton = ({ label }: { label: string }) => (
   <AppButton
     variant="outline"
     size="sm"
-    className="bg-[#020617] text-amber-200 border-amber-300/70 shadow-[0_0_12px_rgba(250,204,21,0.2)] hover:bg-zinc-900"
+    className="rounded-xl bg-[#0A0A0C] text-[#C9A227] border border-[#C9A227]/60 px-3 py-1.5 shadow-[0_0_18px_rgba(201,162,39,0.12)] hover:bg-black/60"
   >
     {label}
   </AppButton>
@@ -194,7 +194,7 @@ export default function UIShowcasePage() {
             </div>
 
             <div className="flex justify-center">
-              <AppButton variant="ghost" size="sm" className="h-10 w-10 rounded-full bg-amber-100/30 text-amber-500 hover:bg-amber-200/50">
+              <AppButton variant="ghost" size="sm" className="h-10 w-10 rounded-full bg-black/40 text-[#C9A227] border border-[#C9A227]/30 hover:bg-black/50">
                 ⇅
               </AppButton>
             </div>
@@ -210,12 +210,12 @@ export default function UIShowcasePage() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between text-[11px] text-amber-100/80">
+            <div className="flex items-center justify-between text-[11px] text-zinc-400">
               <span>1 ETH ≈ 3,524.50 USDC</span>
               <span>Slippage 0.30%</span>
             </div>
 
-            <AppButton variant="primary" className="w-full py-3 text-base shadow-[0_0_18px_rgba(250,204,21,0.35)]">
+            <AppButton variant="primary" className="w-full py-3 text-base shadow-[0_0_32px_rgba(201,162,39,0.18)]">
               Swap with Gold Glow
             </AppButton>
           </div>

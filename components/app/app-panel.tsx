@@ -3,16 +3,16 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 import { PANEL_SHADOW } from "@/config/theme"
 
-const panelVariants = cva("rounded-3xl p-6 transition-all duration-200 backdrop-blur-xl", {
+const panelVariants = cva("rounded-3xl px-6 py-8 transition-all duration-200 backdrop-blur-xl", {
   variants: {
     variant: {
-      dark: "bg-[#020617] text-zinc-50 border border-amber-400/40 shadow-[0_18px_45px_rgba(15,23,42,0.85)] ring-1 ring-amber-300/10",
-      light: "bg-white/90 text-zinc-900 border border-amber-200/60 shadow-[0_12px_32px_rgba(15,23,42,0.14)]",
+      dark: "bg-[#0A0A0C] text-zinc-50 border border-[#C9A227]/30 shadow-[0_18px_45px_rgba(0,0,0,0.6)] ring-1 ring-[rgba(201,162,39,0.12)]",
+      light: "bg-white/90 text-zinc-900 border border-[#C9A227]/30 shadow-[0_12px_32px_rgba(0,0,0,0.08)]",
       glass: "bg-white/80 text-zinc-900 border border-zinc-200/70 shadow-sm",
       subtle: "bg-white/70 text-zinc-900 border border-zinc-200/60 shadow-none",
-      default: "bg-[#020617] text-zinc-50 border border-amber-400/40 shadow-[0_18px_45px_rgba(15,23,42,0.85)] ring-1 ring-amber-300/10",
-      bordered: "bg-white/90 text-zinc-900 border border-amber-200/60 shadow-[0_12px_32px_rgba(15,23,42,0.14)]",
-      elevated: "bg-[#020617] text-zinc-50 border border-amber-400/50 shadow-[0_22px_55px_rgba(15,23,42,0.9)] ring-1 ring-amber-300/10",
+      default: "bg-[#0A0A0C] text-zinc-50 border border-[#C9A227]/30 shadow-[0_18px_45px_rgba(0,0,0,0.6)] ring-1 ring-[rgba(201,162,39,0.12)]",
+      bordered: "bg-white/90 text-zinc-900 border border-[#C9A227]/30 shadow-[0_12px_32px_rgba(0,0,0,0.08)]",
+      elevated: "bg-[#0A0A0C] text-zinc-50 border border-[#C9A227]/35 shadow-[0_22px_55px_rgba(0,0,0,0.72)] ring-1 ring-[rgba(201,162,39,0.12)]",
     },
   },
   defaultVariants: {

@@ -6,14 +6,14 @@ import { Loader2 } from "lucide-react"
 import { GOLD_GLOW_SHADOW } from "@/config/theme"
 
 const appButtonVariants = cva(
-  "group inline-flex items-center justify-center gap-2 rounded-full font-semibold tracking-tight transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-200/70 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-50 disabled:pointer-events-none disabled:opacity-60 border border-transparent shadow-sm",
+  "group inline-flex items-center justify-center gap-2 rounded-xl font-semibold tracking-tight transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,162,39,0.25)] focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-50 disabled:pointer-events-none disabled:opacity-60 border border-transparent shadow-sm",
   {
     variants: {
       variant: {
-        primary: "bg-[#020617] text-zinc-50 shadow-[0_0_18px_rgba(250,204,21,0.35)] hover:bg-zinc-900 hover:border-amber-400/70 active:translate-y-[0.5px]",
-        secondary: "bg-amber-100 text-zinc-900 border border-amber-300/80 hover:bg-amber-200/90 hover:border-amber-400/60",
-        ghost: "bg-transparent text-amber-500 hover:bg-zinc-900/5 border-transparent",
-        outline: "bg-transparent text-amber-500 border border-amber-400/70 hover:bg-amber-50/40",
+        primary: "bg-[#0A0A0C] text-zinc-50 shadow-[0_0_32px_rgba(201,162,39,0.18)] border border-[color:rgba(201,162,39,0.55)] hover:border-[#D4A017] hover:text-white active:translate-y-[0.5px]",
+        secondary: "bg-amber-50 text-zinc-900 border border-[color:rgba(201,162,39,0.35)] hover:bg-amber-100 hover:border-[color:rgba(201,162,39,0.55)]",
+        ghost: "bg-transparent text-[var(--app-gold)] hover:bg-[rgba(12,12,14,0.05)] border-transparent",
+        outline: "bg-transparent text-[var(--app-gold)] border border-[color:rgba(201,162,39,0.55)] hover:border-[var(--app-gold-hover)] hover:bg-[rgba(201,162,39,0.06)]",
         danger: "bg-rose-500 text-white border border-rose-500/80 hover:bg-rose-600",
       },
       size: {

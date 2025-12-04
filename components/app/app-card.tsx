@@ -7,7 +7,7 @@ const appCardVariants = cva("rounded-2xl transition-all duration-200 backdrop-bl
   variants: {
     variant: {
       default: "bg-white/90 border border-zinc-200/80 shadow-sm",
-      bordered: "bg-white/90 border border-amber-200/70 shadow-sm",
+      bordered: "bg-white/90 border border-[#C9A227]/40 shadow-[0_4px_20px_rgba(0,0,0,0.07)]",
       elevated: "bg-white/95 border border-zinc-200/80 shadow-[0_12px_32px_rgba(15,23,42,0.12)]",
       flat: "bg-white/75 border border-zinc-200/60 shadow-none",
     },

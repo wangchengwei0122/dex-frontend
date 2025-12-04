@@ -11,7 +11,7 @@ const AppDivider = React.forwardRef<HTMLDivElement, AppDividerProps>(
       <div
         ref={ref}
         className={cn(
-          "shrink-0 bg-black/5 dark:bg-white/10",
+          "shrink-0 bg-[#C9A227]/40",
           orientation === "horizontal" ? "h-px w-full" : "h-full w-px",
           className
         )}
@@ -23,4 +23,3 @@ const AppDivider = React.forwardRef<HTMLDivElement, AppDividerProps>(
 AppDivider.displayName = "AppDivider"
 
 export { AppDivider }
-
