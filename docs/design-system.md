@@ -1,300 +1,311 @@
-# DEX Design System 规范
+# 🎨 Black & Gold DEX — Design System v1.0
 
-## 1. 整体视觉风格定位
-
-### 风格描述
-**现代、轻量、数据优先的 DeFi 界面风格**
-
-- **现代感**：采用简洁的几何形状、流畅的动画过渡，体现 Web3 的前沿感
-- **轻量化**：减少视觉噪音，突出核心功能和数据展示
-- **中性色为主**：以灰色系作为基础，通过强调色突出重点操作和信息
-- **数据可读性优先**：数字、金额、状态信息清晰易读，使用等宽字体显示关键数据
-- **专业可信**：通过一致的视觉语言和精细的细节处理，建立用户信任
-
-### 设计原则
-
-1. **清晰性（Clarity）**：每个元素都有明确的目的，信息层级清晰
-2. **一致性（Consistency）**：所有组件遵循统一的视觉规范，降低学习成本
-3. **可访问性（Accessibility）**：确保足够的对比度和可读性，支持键盘导航
-4. **性能优先（Performance）**：轻量级动画，避免过度装饰影响性能
-5. **响应式（Responsive）**：适配不同屏幕尺寸，移动端优先考虑
+基于现有 AppBadge / AppButton / AppCard / AppDivider / AppInput / AppPanel / AppSectionTitle 的完整规范
 
 ---
 
-## 2. 颜色系统规范
+## 0. Brand Identity（品牌调性）
 
-### 2.1 主色（Primary）
+### 风格定位
 
-用于主要操作按钮、链接、重要状态指示。
-
-| 模式 | 颜色值 (oklch) | Tailwind 类名 | 使用场景 |
-|------|---------------|--------------|----------|
-| Light | `oklch(0.45 0.15 250)` | `bg-primary` | 主要按钮背景 |
-| Light | `oklch(0.98 0 0)` | `text-primary-foreground` | 主要按钮文字 |
-| Dark | `oklch(0.55 0.15 250)` | `bg-primary` | 主要按钮背景 |
-| Dark | `oklch(0.05 0 0)` | `text-primary-foreground` | 主要按钮文字 |
-
-**说明**：主色采用蓝紫色调（hue: 250），在 Light 模式下较深，Dark 模式下较亮，确保对比度。
-
-### 2.2 强调色（Accent）
-
-用于高亮显示、重要信息提示、链接悬停状态。
-
-| 模式 | 颜色值 (oklch) | Tailwind 类名 | 使用场景 |
-|------|---------------|--------------|----------|
-| Light | `oklch(0.50 0.12 220)` | `bg-accent` | 次要按钮、标签背景 |
-| Light | `oklch(0.15 0 0)` | `text-accent-foreground` | 强调色文字 |
-| Dark | `oklch(0.60 0.12 220)` | `bg-accent` | 次要按钮、标签背景 |
-| Dark | `oklch(0.95 0 0)` | `text-accent-foreground` | 强调色文字 |
-
-**说明**：强调色采用青蓝色调（hue: 220），与主色形成互补，用于次要操作。
-
-### 2.3 语义色（Semantic Colors）
-
-#### 成功（Success）
-| 模式 | 颜色值 (oklch) | Tailwind 类名 | 使用场景 |
-|------|---------------|--------------|----------|
-| Light | `oklch(0.55 0.15 140)` | `text-success` | 成功状态、盈利显示 |
-| Dark | `oklch(0.65 0.15 140)` | `text-success` | 成功状态、盈利显示 |
-
-#### 警告（Warning）
-| 模式 | 颜色值 (oklch) | Tailwind 类名 | 使用场景 |
-|------|---------------|--------------|----------|
-| Light | `oklch(0.70 0.15 60)` | `text-warning` | 警告提示、注意信息 |
-| Dark | `oklch(0.75 0.15 60)` | `text-warning` | 警告提示、注意信息 |
-
-#### 错误（Error / Destructive）
-| 模式 | 颜色值 (oklch) | Tailwind 类名 | 使用场景 |
-|------|---------------|--------------|----------|
-| Light | `oklch(0.58 0.25 27)` | `bg-destructive` / `text-destructive` | 错误状态、删除操作 |
-| Dark | `oklch(0.70 0.19 22)` | `bg-destructive` / `text-destructive` | 错误状态、删除操作 |
-
-### 2.4 背景层级（Background Layers）
-
-| 层级 | Light 模式 | Dark 模式 | Tailwind 类名 | 使用场景 |
-|------|-----------|----------|--------------|----------|
-| Page | `oklch(0.99 0 0)` | `oklch(0.10 0 0)` | `bg-background` | 页面背景 |
-| Card | `oklch(1 0 0)` | `oklch(0.15 0 0)` | `bg-card` | 卡片背景 |
-| Input | `oklch(0.98 0 0)` | `oklch(0.20 0 0)` | `bg-input` | 输入框背景 |
-| Overlay | `oklch(0.15 0 0 / 0.6)` | `oklch(0.05 0 0 / 0.8)` | `bg-overlay` | 遮罩层、Dialog 背景 |
-| Muted | `oklch(0.97 0 0)` | `oklch(0.20 0 0)` | `bg-muted` | 次要背景区域 |
-
-### 2.5 边框颜色（Border Colors）
-
-| 层级 | Light 模式 | Dark 模式 | Tailwind 类名 | 使用场景 |
-|------|-----------|----------|--------------|----------|
-| Default | `oklch(0.90 0 0)` | `oklch(1 0 0 / 0.1)` | `border-border` | 默认边框 |
-| Input | `oklch(0.88 0 0)` | `oklch(1 0 0 / 0.15)` | `border-input` | 输入框边框 |
-| Focus | `oklch(0.45 0.15 250)` | `oklch(0.55 0.15 250)` | `border-ring` | 聚焦状态边框 |
-
-### 2.6 文字颜色（Text Colors）
-
-| 层级 | Light 模式 | Dark 模式 | Tailwind 类名 | 使用场景 |
-|------|-----------|----------|--------------|----------|
-| Primary | `oklch(0.15 0 0)` | `oklch(0.95 0 0)` | `text-foreground` | 主要文字 |
-| Secondary | `oklch(0.45 0 0)` | `oklch(0.70 0 0)` | `text-muted-foreground` | 次要文字 |
-| Disabled | `oklch(0.70 0 0)` | `oklch(0.50 0 0)` | `text-disabled` | 禁用状态文字 |
-| Inverse | `oklch(0.98 0 0)` | `oklch(0.05 0 0)` | `text-inverse` | 反色文字（用于深色背景） |
+- **深色金融风**：沉稳、专业的金融产品视觉风格
+- **黑金主题（Black & Gold）**：以黑色为基底，金色为强调色
+- **高对比、沉稳高端**：通过高对比度营造专业感
+- **Glow（金色光晕）**：关键视觉元素，增强品牌识别度
+- **统一体系**：所有组件以黑色背景 + 金色边线 / 玻璃风输入框形成统一视觉体系
 
 ---
 
-## 3. 间距系统（Spacing Scale）
+## 1. Design Tokens（基础 Design Tokens）
 
-基于 4px 基准单位，形成 8 的倍数系统，确保视觉一致性。
+### 1.1 Colors（核心配色）
 
-| 数值 | Tailwind 类名 | 使用场景示例 |
-|------|--------------|-------------|
-| 4px | `space-1` / `p-1` / `m-1` | 图标与文字间距、紧密排列 |
-| 8px | `space-2` / `p-2` / `m-2` | 小按钮内边距、标签间距 |
-| 12px | `space-3` / `p-3` / `m-3` | 中等按钮内边距、卡片内元素间距 |
-| 16px | `space-4` / `p-4` / `m-4` | 标准按钮内边距、卡片内边距 |
-| 20px | `space-5` / `p-5` / `m-5` | 大按钮内边距、表单元素间距 |
-| 24px | `space-6` / `p-6` / `m-6` | 卡片内边距、区块间距 |
-| 32px | `space-8` / `p-8` / `m-8` | 大卡片内边距、页面区块间距 |
-| 40px | `space-10` / `p-10` / `m-10` | 页面边距、大区块间距 |
-| 48px | `space-12` / `p-12` / `m-12` | 页面容器边距 |
-| 64px | `space-16` / `p-16` / `m-16` | 大页面容器边距、章节间距 |
+#### Black 系列（主背景色）
 
-**间距使用原则**：
-- 垂直间距通常使用 `space-y-*` 或 `gap-*`
-- 水平间距使用 `space-x-*` 或 `gap-*`
-- 内边距使用 `p-*`、`px-*`、`py-*`
-- 外边距使用 `m-*`、`mx-*`、`my-*`
+| Token | Value | 用途 |
+|-------|-------|------|
+| `--black-900` | `#0A0A0C` | DEX 主面板 · 暗黑背景 |
+| `--black-800` | `#0D0F12` | 按钮 hover / 卡片深色 |
+| `--black-700` | `#111316` | 次级背景 |
 
----
+#### Gold 系列（品牌色）
 
-## 4. 圆角系统（Border Radius）
+> 注：以下值来自 button/input/badge/panel 的真实实现
 
-统一的圆角规范，营造现代、友好的视觉感受。
+| Token | Value | 用途 |
+|-------|-------|------|
+| `--gold` | `#C9A227` | 主品牌金色 |
+| `--gold-soft` | `rgba(201,162,39,0.35)` | hover 高亮金色 |
+| `--gold-border` | `rgba(201,162,39,0.30–0.60)` | 按钮与卡片边框 |
+| `--gold-glow` | `rgba(201,162,39,0.28)` | 按钮大外发光 |
+| `--gold-divider` | `rgba(201,162,39,0.40)` | 分割线 |
 
-| 圆角值 | Tailwind 类名 | 使用场景 |
-|--------|--------------|----------|
-| 4px | `rounded-sm` | 小标签、徽章 |
-| 6px | `rounded-md` | 小按钮、输入框 |
-| 8px | `rounded-lg` | 标准按钮、卡片（小） |
-| 12px | `rounded-xl` | 标准卡片、对话框 |
-| 16px | `rounded-2xl` | 大卡片、模态框 |
-| 20px | `rounded-3xl` | 特殊卡片、大模态框 |
-| 9999px | `rounded-full` | 圆形按钮、头像 |
+#### Neutral 系列
 
-**圆角使用规范**：
-- **按钮**：sm 使用 `rounded-md` (6px)，md/lg 使用 `rounded-lg` (8px)
-- **输入框**：统一使用 `rounded-lg` (8px)
-- **卡片**：标准卡片使用 `rounded-xl` (12px)，大卡片使用 `rounded-2xl` (16px)
-- **对话框**：使用 `rounded-2xl` (16px) 或 `rounded-3xl` (20px)
+| Token | Value |
+|-------|-------|
+| `--gray-50` | `#F9FAFB` |
+| `--gray-300` | `#D4D4D8` |
+| `--gray-500` | `#71717A` |
+| `--gray-700` | `#3F3F46` |
+| `--gray-900` | `#18181B` |
 
 ---
 
-## 5. 字体系统（Typography）
+### 1.2 Radii（圆角半径）
 
-### 5.1 字体族（Font Families）
+基于所有组件代码抽取出的统一规则：
 
-| 字体 | CSS 变量 | Tailwind 类名 | 使用场景 |
-|------|----------|--------------|----------|
-| Sans | `--font-geist-sans` | `font-sans` | 正文、标题、UI 元素 |
-| Mono | `--font-geist-mono` | `font-mono` | 地址、哈希、金额、代码 |
+| Token | Value | 用途 |
+|-------|-------|------|
+| `--radius-sm` | `8px` | Badge, 小控件 |
+| `--radius-md` | `12px` | Button, TokenPill |
+| `--radius-lg` | `20px` | Card |
+| `--radius-xl` | `24px–28px` | 面板 / Swap 主容器 |
 
-### 5.2 标题层级（Headings）
-
-| 层级 | 字号 | 行高 | 字重 | Tailwind 类名 | 使用场景 |
-|------|------|------|------|--------------|----------|
-| H1 | 32px | 1.2 | 700 | `text-3xl font-bold` | 页面主标题 |
-| H2 | 24px | 1.3 | 600 | `text-2xl font-semibold` | 区块标题 |
-| H3 | 20px | 1.4 | 600 | `text-xl font-semibold` | 卡片标题 |
-| H4 | 18px | 1.4 | 600 | `text-lg font-semibold` | 小节标题 |
-| H5 | 16px | 1.5 | 600 | `text-base font-semibold` | 小标题 |
-| H6 | 14px | 1.5 | 600 | `text-sm font-semibold` | 标签标题 |
-
-### 5.3 正文（Body Text）
-
-| 类型 | 字号 | 行高 | 字重 | Tailwind 类名 | 使用场景 |
-|------|------|------|------|--------------|----------|
-| Large | 18px | 1.6 | 400 | `text-lg` | 重要正文、引导文字 |
-| Base | 16px | 1.5 | 400 | `text-base` | 标准正文 |
-| Small | 14px | 1.5 | 400 | `text-sm` | 次要文字、说明 |
-| XSmall | 12px | 1.4 | 400 | `text-xs` | 辅助信息、标签文字 |
-
-### 5.4 数字/金额显示（Numbers）
-
-| 类型 | 字号 | 字重 | 字体 | Tailwind 类名 | 使用场景 |
-|------|------|------|------|--------------|----------|
-| Large | 32px | 600 | Mono | `text-3xl font-semibold font-mono` | 大金额显示 |
-| Medium | 24px | 600 | Mono | `text-2xl font-semibold font-mono` | 中等金额 |
-| Base | 18px | 500 | Mono | `text-lg font-medium font-mono` | 标准金额 |
-| Small | 16px | 500 | Mono | `text-base font-medium font-mono` | 小金额 |
-| XSmall | 14px | 500 | Mono | `text-sm font-medium font-mono` | 辅助金额 |
-
-**说明**：金额、地址、哈希等关键数据使用等宽字体（Mono），确保对齐和可读性。
+> **注意**：所有输入框统一使用 `12px`，Panel 使用 `24–28px`，已形成统一体系。
 
 ---
 
-## 6. 阴影系统（Shadows）
+### 1.3 Shadows（阴影）
 
-分层的阴影系统，营造深度感和层次感。
+#### Gold Glow（按钮主视觉元素）
 
-| 层级 | 阴影值 | Tailwind 类名 | 使用场景 |
-|------|--------|--------------|----------|
-| None | `none` | `shadow-none` | 无阴影 |
-| Sm | `0 1px 2px 0 oklch(0 0 0 / 0.05)` | `shadow-sm` | 输入框、小卡片 |
-| Base | `0 1px 3px 0 oklch(0 0 0 / 0.1), 0 1px 2px -1px oklch(0 0 0 / 0.1)` | `shadow` | 标准卡片 |
-| Md | `0 4px 6px -1px oklch(0 0 0 / 0.1), 0 2px 4px -2px oklch(0 0 0 / 0.1)` | `shadow-md` | 悬浮卡片、下拉菜单 |
-| Lg | `0 10px 15px -3px oklch(0 0 0 / 0.1), 0 4px 6px -4px oklch(0 0 0 / 0.1)` | `shadow-lg` | 对话框、模态框 |
-| Xl | `0 20px 25px -5px oklch(0 0 0 / 0.1), 0 8px 10px -6px oklch(0 0 0 / 0.1)` | `shadow-xl` | 大模态框、抽屉 |
-| 2xl | `0 25px 50px -12px oklch(0 0 0 / 0.25)` | `shadow-2xl` | 特殊悬浮层 |
-
-**Dark 模式调整**：
-- Dark 模式下，阴影使用更低的透明度，或使用 `oklch(1 0 0 / 0.05)` 等浅色阴影
-- 卡片在 Dark 模式下可配合边框使用，减少阴影依赖
-
-**阴影使用规范**：
-- **卡片**：默认 `shadow`，悬浮时 `shadow-md`
-- **输入框**：聚焦时 `shadow-sm`
-- **按钮**：悬浮时 `shadow-sm`，按下时无阴影
-- **对话框**：`shadow-lg` 或 `shadow-xl`
-- **下拉菜单**：`shadow-md`
-
----
-
-## 7. 动画与过渡（Animation & Transitions）
-
-### 7.1 过渡时长（Transition Duration）
-
-| 时长 | Tailwind 类名 | 使用场景 |
-|------|--------------|----------|
-| 75ms | `duration-75` | 快速反馈（按钮点击） |
-| 150ms | `duration-150` | 标准过渡（颜色、背景） |
-| 200ms | `duration-200` | 标准过渡（默认） |
-| 300ms | `duration-300` | 平滑过渡（尺寸变化） |
-| 500ms | `duration-500` | 慢速过渡（页面切换） |
-
-### 7.2 缓动函数（Easing Functions）
-
-| 函数 | Tailwind 类名 | 使用场景 |
-|------|--------------|----------|
-| ease-in-out | `ease-in-out` | 标准过渡（默认） |
-| ease-out | `ease-out` | 进入动画 |
-| ease-in | `ease-in` | 退出动画 |
-
-### 7.3 常用动画组合
-
-| 场景 | Tailwind 类名组合 | 说明 |
-|------|------------------|------|
-| 按钮悬停 | `transition-colors duration-200` | 颜色过渡 |
-| 卡片悬浮 | `transition-shadow duration-200` | 阴影过渡 |
-| 模态框出现 | `transition-all duration-300 ease-out` | 全属性过渡 |
-| 加载状态 | `animate-spin` | 旋转动画 |
-
----
-
-## 8. Tailwind 配置映射建议
-
-### 8.1 颜色扩展（在 `tailwind.config.ts` 中）
-
-```typescript
-colors: {
-  primary: {
-    DEFAULT: 'oklch(0.45 0.15 250)',
-    foreground: 'oklch(0.98 0 0)',
-  },
-  accent: {
-    DEFAULT: 'oklch(0.50 0.12 220)',
-    foreground: 'oklch(0.15 0 0)',
-  },
-  success: 'oklch(0.55 0.15 140)',
-  warning: 'oklch(0.70 0.15 60)',
-  // ... 其他颜色
-}
+```css
+0 0 32px rgba(201,162,39,0.28)
 ```
 
-### 8.2 间距扩展
+#### Input 内阴影
 
-保持 Tailwind 默认间距系统（基于 4px），无需额外配置。
-
-### 8.3 圆角扩展
-
-保持 Tailwind 默认圆角系统，或根据需要扩展：
-```typescript
-borderRadius: {
-  'xs': '2px',
-  'sm': '4px',
-  'md': '6px',
-  'lg': '8px',
-  'xl': '12px',
-  '2xl': '16px',
-  '3xl': '20px',
-}
+```css
+inset 0 1px 0 rgba(255,255,255,0.35),
+0 2px 10px rgba(0,0,0,0.06)
 ```
+
+#### Panel（深色）
+
+```css
+0 18px 45px rgba(0,0,0,0.6)
+```
+
+#### Elevated Panel
+
+```css
+0 22px 55px rgba(0,0,0,0.72)
+```
+
+> **规则**：所有 glow 使用金色，透明度统一在 `0.12–0.35` 之间。
 
 ---
 
-## 9. 总结
+## 2. Component Architecture（组件体系）
 
-本 Design System 规范提供了：
-- ✅ 完整的颜色系统（Light/Dark 模式）
-- ✅ 统一的间距、圆角、字体规范
-- ✅ 分层的阴影系统
-- ✅ 清晰的 Tailwind 类名映射
-- ✅ 可直接应用到项目中的 CSS 变量建议
+以下规范基于现有组件代码总结。
 
-所有规范都考虑了 DeFi/DEX 产品的特殊需求，特别是数据可读性和专业可信度。下一步将基于此规范设计基础组件系统。
+---
 
+### 2.1 Badges（AppBadge）
+
+#### Variants（变体）
+
+- **default**：白底灰边
+- **primary**：黑底金边（主要 DEX 样式）
+- **outline**：透明底金边
+- **success / warning / error**：友好色补充
+
+#### Sizes（尺寸）
+
+- `sm` / `md` / `lg`（统一 px 值）
+
+#### Style Rules（样式规则）
+
+- `rounded-full`：完全圆角
+- `font-semibold`：半粗字体
+- 金色 glow（primary 变体必须带）
+
+---
+
+### 2.2 Buttons（AppButton）
+
+#### Variants（变体）
+
+**primary（主按钮）**
+
+- 黑底
+- 金色边框透明度 `0.65`
+- 背景金色渐变：`linear-gradient(120deg, rgba(201,162,39,0.5), rgba(201,162,39,0.05))`
+- 大阴影 glow
+
+**其他变体**
+
+- `secondary`
+- `ghost`
+- `outline`
+- `danger`（红色）
+
+#### Sizes（尺寸）
+
+- `sm` / `md` / `lg` — 已标准化
+
+#### Rules（规则）
+
+- 始终使用 `rounded-xl`
+- 始终使用粗体文本
+- primary 变体必须配 glow
+- hover 状态金色变亮
+- active 状态小幅 `translate-y-[0.5px]`
+
+---
+
+### 2.3 Card（AppCard）
+
+Card 系列都属于亮色主题：
+
+- **玻璃白背景**：`white/90`
+- **金色边框**：透明度 `0.24–0.30`
+- **阴影级别**：`default` / `elevated` / `flat`
+- **圆角**：`rounded-3xl`
+
+#### 使用场景
+
+- 表单模块
+- 子卡片
+- 信息区块
+
+---
+
+### 2.4 Divider（AppDivider）
+
+- **颜色**：金色 40% — `#C9A227 / 0.40`
+- **方向**：支持水平 & 垂直
+- **风格**：环境光照风格
+
+---
+
+### 2.5 Field Label（AppFieldLabel）
+
+- **文本样式**：`uppercase` + `tracking-[0.08em]`
+- **字体大小**：`text-xs` + 灰色文字
+- **必填标识**：`required` 使用 `amber-400`
+
+---
+
+### 2.6 Input（AppInput）
+
+这是 UI 体系中最核心的风格之一。
+
+#### 默认状态
+
+- **背景**：`bg-white/6`
+- **玻璃毛玻璃风**：`backdrop-blur-xl`
+- **内阴影**：`inset 0 1px 0 rgba(255,255,255,0.35)`
+- **边框**：`zinc-200`
+- **hover**：变为金色边框
+
+#### Focus 状态
+
+- 金色 ring
+- 金色边框
+- 更强的 inner shadow
+
+#### Disabled 状态
+
+- 白底 60%
+- 文本灰色
+- 不可交互
+
+---
+
+### 2.7 Panel（AppPanel）
+
+支持 `dark` / `light` / `bordered` / `elevated` 变体。
+
+#### Dark（默认 DEX 主 panel）
+
+- **背景**：黑色 `#0A0A0C`
+- **边框**：金色 30%
+- **阴影**：大阴影（黑金融风）
+- **Ring**：金色 ring
+- **圆角**：`rounded-3xl`
+
+#### Elevated
+
+- 更强的黑色阴影（对比度更高）
+
+#### Light / Glass
+
+- 用于亮面板、子内容区域
+
+---
+
+### 2.8 Section Title（AppSectionTitle）
+
+- **文本样式**：`uppercase`
+- **字间距**：超大 `tracking-[0.22em]`
+- **字体大小**：`text-[12px]`
+- **颜色**：灰色文字
+- **可选元素**：金色 divider
+
+**使用场景**：模块标题 / 区块分隔
+
+---
+
+## 3. Rules for All Components（全组件统一规则）
+
+AI 生成组件必须遵守以下硬规则：
+
+1. **颜色规范**：所有颜色必须使用 Design Tokens 中的 Black / Gold / Neutral 系列，不允许使用任意新颜色。
+2. **圆角规范**：圆角只能使用 `sm` / `md` / `lg` / `xl` 四类。
+3. **背景规范**：所有深色组件使用主黑 `#0A0A0C` 背景。
+4. **透明度规范**：所有金色相关元素透明度必须在 `0.20–0.65` 之间。
+5. **边框规范**：所有边框必须为 `1px`。
+6. **Glow 规范**：所有 glow 阴影必须使用金色 glow，不得使用其他颜色。
+7. **Input 规范**：所有 Input 必须采用玻璃模糊风格。
+8. **Panel 规范**：所有 Panel 必须有金色 ring（深色模式）。
+9. **Hover 规范**：所有 hover 必须让金色变亮，不得更改为其他颜色。
+10. **统一性**：遵循以上规则，确保所有 UI 保持完美统一。
+
+---
+
+## 4. Layout / Navigation / Page 结构基准
+
+在未生成导航前，整体 Layout 必须遵循：
+
+- **Navbar 高度**：`64px`
+- **Panel 外层 padding**：`px-6 py-8`
+- **Page container**：`max-w-screen-xl mx-auto px-4`
+- **背景**：必须使用 `--black-900`
+- **Hover 效果**：金色 hover 必须明显但不过亮
+
+---
+
+## 5. AI 使用提示
+
+### 组件生成提示词
+
+在每次生成组件时，请在 Prompt 前添加以下内容：
+
+> 请严格遵循 `/docs/design-system.md` 中的 Black & Gold DEX UI 规范。  
+> 所有颜色、阴影、透明度、圆角、边框风格必须完全按照规范执行，不得发明新风格。
+
+这样可以确保 AI 生成的组件始终符合设计系统规范。
+
+---
+
+## 附录
+
+### 相关组件
+
+- `AppBadge` - 徽章组件
+- `AppButton` - 按钮组件
+- `AppCard` - 卡片组件
+- `AppDivider` - 分割线组件
+- `AppFieldLabel` - 字段标签组件
+- `AppInput` - 输入框组件
+- `AppPanel` - 面板组件
+- `AppSectionTitle` - 区块标题组件
+
+### 文档版本
+
+- **版本**：v1.0
+- **最后更新**：基于现有组件代码提取
