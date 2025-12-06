@@ -26,8 +26,8 @@ import { cn } from "@/lib/utils"
 
 
 const appInputVariants = cva(
-  // ✅ 改成深色基底
-  "rounded-xl border transition-all duration-200 ease-out bg-[#121216] text-zinc-100 placeholder:text-zinc-500 backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.03),0_18px_45px_rgba(0,0,0,0.65)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,162,39,0.35)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#050507]",
+  // 深色玻璃输入框基底
+  "rounded-xl border border-[color:var(--gold-border-strong)]  transition-all duration-200 ease-out bg-[color:var(--black-700)] text-zinc-100 placeholder:text-[color:var(--input-placeholder)] backdrop-blur-xl shadow-[inset_0_1px_0_rgba(255,255,255,0.03),0_18px_45px_rgba(0,0,0,0.65)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold-soft)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--black-900)]",
   {
     variants: {
       size: {
@@ -36,20 +36,10 @@ const appInputVariants = cva(
         lg: "h-12 px-5 text-base",
       },
       error: {
-        // ❌ 原来是 bg-rose-50/70 -> 整块粉色
-        // true:
-        //   "border-rose-500/80 bg-[#1b1214] text-rose-100 placeholder:text-rose-300/70 focus-visible:ring-rose-400/50 focus-visible:ring-offset-[#120c0d]",
-
-
-          true: [
-            "border-[var(--error-border)]",
-            "bg-[#111316]", // 或者和正常 input 一样的深底
-            "text-[var(--error)]",
-            "focus-visible:ring-[rgba(249,112,102,0.45)]",
-            "focus-visible:ring-offset-[#050507]",
-          ].join(" "),
+        true:
+          "border-[color:var(--error-border)] bg-[#111316] text-[color:var(--error-text)] placeholder:text-[color:var(--error)] focus-visible:ring-[rgba(249,112,102,0.45)] focus-visible:ring-offset-[color:var(--black-900)]",
         false:
-          "border-zinc-700/80 hover:border-[#C9A227] focus-visible:border-[#F6D27A]",
+          "border-[color:var(--gold)] hover:border-[color:var(--app-gold-hover)] focus-visible:border-[color:var(--app-gold-hover)]",
       },
     },
     defaultVariants: {
