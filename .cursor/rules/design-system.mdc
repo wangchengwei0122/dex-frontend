@@ -1,0 +1,168 @@
+---
+alwaysApply: true
+---
+
+# Black & Gold DEX UI Rule
+
+本规则用于 **dex-frontend** 仓库，约束所有与 UI 相关的代码生成 / 修改，确保严格遵守  
+`/docs/design-system.md` 中的 **Black & Gold DEX Design System v1.0**。
+
+---
+
+## 0. 总体要求
+
+- 你在这个仓库里写任何 **UI 相关代码**（组件、页面、样式）时，都必须视 `/docs/design-system.md` 为唯一的设计规范来源。
+- 在不确定的时候，**优先保持现有实现的一致性**，而不是随意“优化视觉”或引入新风格。
+- 如用户没有明确要求，**不要自行修改 `/docs/design-system.md`**，只能遵守。
+
+---
+
+## 1. 设计规范来源（Source of truth）
+
+在生成或修改 UI 代码前，请默认遵守以下文件中的规范：
+
+1. `/docs/design-system.md`
+   - Black & Gold DEX 的品牌调性、颜色、圆角、阴影、间距、字体等 Design Tokens
+   - 各基础组件（AppBadge / AppButton / AppCard / AppDivider / AppInput / AppPanel / AppSectionTitle）的行为和风格
+
+2. `/styles/global.css` 或等价全局样式文件
+   - 里面定义的 `--black-*` / `--gold-*` / `--gray-*` / `--radius-*` / `--shadow-*` / `--error-*` 等 CSS 变量是颜色和阴影的**唯一来源**。
+
+如果设计规范和代码有轻微不一致，**以实际代码为准**，并在说明中提示用户。
+
+---
+
+## 2. 颜色 & Design Tokens 使用规范
+
+在本仓库中写任何样式时：
+
+1. **禁止直接写任意新的十六进制颜色**，例如 `#123456`、`#ff00ff` 等；
+2. 优先使用项目中已有的：
+   - CSS 变量：`var(--black-900)`, `var(--gold-border)`, `var(--error-border)` 等；
+   - Tailwind 配置映射后的颜色类（如果已有）；
+3. 深色背景必须使用 Black 系列：
+   - 页面 / Panel 背景：`var(--black-900)` / `var(--black-800)`；
+4. 金色相关效果使用 Gold 系列：
+   - 文本：`var(--gold)`
+   - 边框 / 分割线：`var(--gold-border)` / `var(--gold-divider)`
+   - Glow 阴影：`var(--gold-glow)` 或相应的阴影变量；
+5. 错误、成功、警告等语义色：
+   - 使用已定义的 `--success-*` / `--warning-*` / `--error-*` tokens（如有），
+   - 如果需要新的语义 token，先告诉用户，而不是直接发明一个颜色。
+
+---
+
+## 3. 字体 / 字号 / 文本样式
+
+生成或修改文本相关样式时：
+
+1. 使用 Design System 中的字体层级，优先使用已有的 Tailwind 类：
+   - 标题：`text-3xl/2xl/xl/lg` + `font-semibold`/`font-bold`
+   - 正文：`text-base` / `text-sm` / `text-xs`
+2. 金融数字、金额、地址等关键数据：
+   - 使用 `font-mono`（等宽字体）+ 设计规范中的字号；
+3. 标签 / Section Title：
+   - 使用 `uppercase` + 大字间距（如 `tracking-[0.22em]`）+ `text-xs`，参考 `AppSectionTitle` 和 `AppFieldLabel`；
+4. 文本颜色：
+   - 主体文字：`text-foreground`（映射到 Design Tokens）或对应 CSS 变量；
+   - 次要说明：`text-muted-foreground` / 灰色 tokens；
+   - 避免自行选择新的灰度颜色。
+
+---
+
+## 4. 间距 / 圆角 / 阴影
+
+### 间距（Spacing）
+
+- 只使用基于 4px 的间距系统（Tailwind 默认间距，如 `2/3/4/5/6/8/10/12/16` 等）。
+- 布局间距优先用：
+  - 容器：`px-4` / `px-6` / `px-8`，`py-6` / `py-8`
+  - 元素间距：`gap-3` / `gap-4`
+- 不要自创奇怪的数值（例如 `px-7`, `gap-5.5` 等）。
+
+### 圆角（Radii）
+
+- 只能使用 Design Tokens 中的几个级别：
+  - Badge / 小控件：`var(--radius-sm)`（或 `rounded-full`）
+  - Button / Input：`var(--radius-md)`（如 `rounded-xl`）
+  - Card：`var(--radius-lg)`（如 `rounded-3xl`）
+  - Panel / Swap 主容器：`var(--radius-xl)` 对应的圆角
+- 不要写新的半径值（如 `rounded-[18px]`）。
+
+### 阴影（Shadows）
+
+- Glow、Panel、Card 等阴影必须使用项目中已有的阴影变量：
+  - 按钮：`var(--shadow-gold-glow)` 或 `GOLD_GLOW_SHADOW` 常量；
+  - 面板：`PANEL_SHADOW` 等；
+- 禁止擅自添加新的复杂阴影值，除非遵循 Design System 中的规则。
+
+---
+
+## 5. 组件层面的硬规则
+
+### 5.1 只能在现有组件之上搭建
+
+在新页面 / 功能中：
+
+- 需要按钮 → 优先使用 `AppButton`，继承其 `variant` / `size`；
+- 需要输入框 → 使用 `AppInput` + `AppFieldLabel`；
+- 需要卡片容器 → 使用 `AppCard` 或 `AppPanel`；
+- 需要徽章 → 使用 `AppBadge`。
+
+除非用户明确要求创建「新风格组件」，否则**不要**为了方便，直接用 `<button>` / `<input>` + 全新样式代替上述组件。
+
+### 5.2 修改现有组件时
+
+- 不要随意删除或重命名已有的 `variant` / `size`；
+- 新增变体时：
+  - 与 Design System 一致（例如 `primary/secondary/ghost/outline/danger`）；
+  - 清楚说明新增变体的用途和视觉风格；
+- 任何会 **影响全局视觉** 的修改（例如把 Panel 改成亮色系）都应该先提示用户，而不是默默改掉。
+
+---
+
+## 6. 页面 / Layout 相关约束
+
+在生成 Layout 或页面骨架时：
+
+1. 统一背景：页面背景使用 `var(--black-900)`；
+2. Navbar：
+   - 高度约 `64px`；
+   - 左侧为品牌 / Logo，中间为导航 Tab（Trade / Explore / Pool ...），右侧为链 + 钱包信息；
+3. 主内容区域：
+   - 使用容器：`max-w-screen-xl mx-auto px-4` 或项目中已有的容器样式；
+   - 内部使用 `AppPanel` 或 `AppCard` 构建内容块；
+4. 不要引入新的布局框架（如额外的 CSS Grid 系统）破坏现有结构，除非用户明确同意。
+
+---
+
+## 7. 禁止行为（What NOT to do）
+
+在本仓库中，你**不要**做以下事情：
+
+- ❌ 引入新的第三方 UI 库（如 MUI、Ant Design、Chakra 等）来解决样式问题；
+- ❌ 在组件中直接写随机的 hex 颜色、rgba 颜色、box-shadow，而不通过 Design Tokens；
+- ❌ 重写现有组件的结构，只为了追求“好看”，导致与现有页面不一致；
+- ❌ 修改或删除 `/docs/design-system.md` 的视觉规范，除非用户明确要求；
+- ❌ 将明亮主题或其他配色混入当前 Black & Gold DEX 主题中。
+
+---
+
+## 8. 当你不确定时
+
+如果你在以下问题上不确定：
+
+- 颜色应该用哪个 Token？
+- 新的状态 / 变体该归属哪个组件？
+- 阴影 / 圆角是否符合当前规范？
+
+优先策略：
+
+1. **模仿现有组件**（比如看 `AppButton`, `AppInput`, `AppPanel` 的实现）；
+2. 保持保守：用现有的 token 和风格，不发明新东西；
+3. 必要时，在回答中向用户说明「此处有多种可能，当前选择是 X，理由是 Y」，让用户决定是否调整。
+
+---
+
+> 总之：**你的任务是“延续并执行 design-system”，而不是“重新设计 UI”。**  
+> 所有样式改变都应该在 Black & Gold DEX 这套体系内完成。

@@ -7,4 +7,22 @@ export { AppFieldLabel, type AppFieldLabelProps } from "./app-field-label"
 export { AppPanel, type AppPanelProps } from "./app-panel"
 export { AppDivider, type AppDividerProps } from "./app-divider"
 export { AppNavbar, type AppNavbarProps } from "./app-navbar"
+export {
+  AppDialog,
+  AppDialogTrigger,
+  AppDialogContent,
+  AppDialogHeader,
+  AppDialogTitle,
+  AppDialogDescription,
+  AppDialogFooter,
+  AppDialogClose,
+  type AppDialogContentProps,
+} from "./app-dialog"
+export {
+  AppPopover,
+  AppPopoverTrigger,
+  AppPopoverContent,
+  AppPopoverAnchor,
+  type AppPopoverContentProps,
+} from "./app-popover"
 
