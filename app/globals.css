@@ -120,3 +120,75 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* RainbowKit 黑金主题自定义样式 */
+@layer components {
+  /* ConnectButton 容器 - 更紧凑 */
+  [data-rk] {
+    font-size: 13px !important;
+  }
+
+  /* ConnectButton 基础样式 - 更小更紧凑 */
+  [data-rk] button[data-testid] {
+    background-color: #0A0A0C !important;
+    border: 1px solid rgba(201, 162, 39, 0.25) !important;
+    border-radius: 12px !important;
+    color: #C9A227 !important;
+    padding: 6px 12px !important;
+    height: auto !important;
+    min-height: auto !important;
+    transition: all 0.2s ease-out !important;
+    font-size: 13px !important;
+    line-height: 1.4 !important;
+  }
+
+  /* ConnectButton hover 状态 */
+  [data-rk] button[data-testid]:hover {
+    background-color: #111111 !important;
+    box-shadow: 0 0 12px rgba(201, 162, 39, 0.4) !important;
+    border-color: rgba(201, 162, 39, 0.4) !important;
+  }
+
+  /* ConnectButton 文字颜色和大小 */
+  [data-rk] button[data-testid] span {
+    color: #C9A227 !important;
+    font-size: 13px !important;
+    font-weight: 500 !important;
+  }
+
+  /* ConnectButton 内部元素 - 更紧凑 */
+  [data-rk] button[data-testid] > div {
+    gap: 6px !important;
+    padding: 0 !important;
+  }
+
+  /* 网络选择器和钱包地址按钮 - 更紧凑 */
+  [data-rk] button[data-testid] button {
+    padding: 4px 8px !important;
+    font-size: 12px !important;
+    height: auto !important;
+    min-height: auto !important;
+  }
+
+  /* 图标大小 */
+  [data-rk] button[data-testid] svg {
+    width: 14px !important;
+    height: 14px !important;
+  }
+
+  /* 模态框背景 */
+  [data-rk] [role="dialog"] {
+    background-color: #0A0A0C !important;
+  }
+
+  /* 钱包选项背景 */
+  [data-rk] [role="button"][aria-label*="wallet"] {
+    background-color: #111111 !important;
+    border-color: rgba(201, 162, 39, 0.25) !important;
+  }
+
+  [data-rk] [role="button"][aria-label*="wallet"]:hover {
+    background-color: rgba(201, 162, 39, 0.1) !important;
+    border-color: rgba(201, 162, 39, 0.4) !important;
+  }
+}

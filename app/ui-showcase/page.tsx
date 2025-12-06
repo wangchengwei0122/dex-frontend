@@ -21,7 +21,7 @@ const TokenButton = ({ label }: { label: string }) => (
 
 export default function UIShowcasePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-zinc-50 via-zinc-50 to-zinc-100 text-zinc-900">
+    <div className="min-h-screen  from-zinc-50 via-zinc-50 to-zinc-100 text-zinc-900">
       <div className="mx-auto max-w-6xl px-4 py-10 space-y-8">
         <header className="space-y-4">
           <div className="inline-flex items-center gap-2 rounded-full border border-amber-300/50 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-amber-600 shadow-sm backdrop-blur">

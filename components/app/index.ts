@@ -6,4 +6,5 @@ export { AppSectionTitle, type AppSectionTitleProps } from "./app-section-title"
 export { AppFieldLabel, type AppFieldLabelProps } from "./app-field-label"
 export { AppPanel, type AppPanelProps } from "./app-panel"
 export { AppDivider, type AppDividerProps } from "./app-divider"
+export { AppNavbar, type AppNavbarProps } from "./app-navbar"
 

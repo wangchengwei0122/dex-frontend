@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { Web3Provider } from "./provider";
+import { WalletProvider } from "@/providers/wallet-provider";
+import { AppNavbar } from "@/components/app/app-navbar";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -26,9 +27,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#0A0A0C] text-zinc-50`}
       >
-        <Web3Provider>{children}</Web3Provider>
+        <WalletProvider>
+          <AppNavbar />
+          <main className="pt-16">
+            <div className="max-w-screen-xl mx-auto px-4">
+              {children}
+            </div>
+          </main>
+        </WalletProvider>
       </body>
     </html>
   );
