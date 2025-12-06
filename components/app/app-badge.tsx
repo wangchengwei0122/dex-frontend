@@ -1,7 +1,9 @@
 import * as React from "react"
-import { Badge, type BadgeProps } from "@/components/ui/badge"
+import { Badge } from "@/components/ui/badge"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
+
+type BadgeProps = React.ComponentProps<typeof Badge>
 
 const appBadgeVariants = cva(
   "rounded-full font-semibold transition-all duration-200 tracking-tight",
@@ -12,7 +14,8 @@ const appBadgeVariants = cva(
 
         default:"bg-[#101015] text-zinc-300 border border-zinc-700/80 shadow-[0_0_0_1px_rgba(10,10,15,0.9)]",
 
-        primary: "bg-[#0A0A0C] text-[#C9A227] border border-[#f5c76a80] shadow-[0_0_12px_rgba(201,162,39,0.15)]",
+        primary:
+          "bg-[#0A0A0C] text-[color:var(--gold)] border border-[#f5c76a80] shadow-[0_0_12px_rgba(201,162,39,0.15)]",
         // success: "bg-emerald-50 text-emerald-700 border border-emerald-200",
 
         success:"bg-emerald-500/10 text-emerald-200 border border-emerald-400/70",
@@ -25,7 +28,8 @@ const appBadgeVariants = cva(
 
         error:"bg-rose-500/10 text-rose-200 border border-rose-400/70",
 
-        outline: "border border-[#f5c76a80] text-[#C9A227] bg-transparent",
+        outline:
+          "border border-[#f5c76a80] text-[color:var(--gold)] bg-transparent",
       },
       size: {
         sm: "h-7 px-3 text-[13px]",
@@ -40,7 +44,9 @@ const appBadgeVariants = cva(
   }
 )
 
-export interface AppBadgeProps extends BadgeProps, VariantProps<typeof appBadgeVariants> {}
+export interface AppBadgeProps
+  extends Omit<BadgeProps, "variant">,
+    VariantProps<typeof appBadgeVariants> {}
 
 const AppBadge = React.forwardRef<HTMLSpanElement, AppBadgeProps>(
   ({ className, variant, size, ...props }, ref) => {

@@ -1,19 +1,25 @@
 import * as React from "react"
-import { Button, type ButtonProps } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 import { Loader2 } from "lucide-react"
 import { GOLD_GLOW_SHADOW } from "@/config/theme"
 
+type ButtonProps = React.ComponentProps<typeof Button>
+
 const appButtonVariants = cva(
-  "group inline-flex items-center justify-center gap-2 rounded-xl font-semibold tracking-tight transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(201,162,39,0.25)] focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-50 disabled:pointer-events-none disabled:opacity-60 border border-transparent shadow-sm",
+  "group inline-flex items-center justify-center gap-2 rounded-xl font-semibold tracking-tight transition-all duration-200 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--gold-soft)] focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-50 disabled:pointer-events-none disabled:opacity-60 border border-transparent shadow-sm",
   {
     variants: {
       variant: {
-        primary: "bg-[#0A0A0C] text-zinc-50 shadow-[0_0_32px_rgba(201,162,39,0.28)] border border-[color:rgba(201,162,39,0.65)] hover:bg-zinc-900 hover:border-[#D4A017] hover:text-white active:translate-y-[0.5px] relative overflow-hidden",
-        secondary: "bg-amber-50 text-zinc-900 border border-[color:rgba(201,162,39,0.35)] hover:bg-amber-100 hover:border-[color:rgba(201,162,39,0.55)]",
-        ghost: "bg-transparent text-[#C9A227] border border-[#C9A227]/40 hover:border-[#C9A227] hover:bg-[rgba(201,162,39,0.06)]",
-        outline: "bg-transparent text-[#C9A227] border border-[#C9A227]/60 hover:border-[#F6D27A] hover:bg-[rgba(201,162,39,0.10)]",
+        primary:
+          "bg-[var(--panel-bg-dark)] text-zinc-50 shadow-[var(--gold-glow-shadow)] border border-[color:var(--gold-border-strong)] hover:bg-zinc-900 hover:border-[color:var(--app-gold-hover)] hover:text-white active:translate-y-[0.5px] relative overflow-hidden",
+        secondary:
+          "bg-amber-50 text-zinc-900 border border-[color:var(--gold-border-soft)] hover:bg-amber-100 hover:border-[color:var(--gold-border-strong)]",
+        ghost:
+          "bg-transparent text-[var(--gold)] border border-[#C9A227]/40 hover:border-[#C9A227] hover:bg-[rgba(201,162,39,0.06)]",
+        outline:
+          "bg-transparent text-[var(--gold)] border border-[#C9A227]/60 hover:border-[#F6D27A] hover:bg-[rgba(201,162,39,0.10)]",
         // danger:"bg-[#b91c1c] text-rose-50 border border-rose-500/80 hover:bg-[#dc2626] hover:border-rose-400/90 shadow-[0_0_22px_rgba(185,28,28,0.45)]",
         // danger:"bg-[var(--error)] text-white border border-[var(--error-border)] shadow-[var(--error-glow)] hover:brightness-110",
 
