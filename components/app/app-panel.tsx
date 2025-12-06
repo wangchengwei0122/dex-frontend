@@ -6,13 +6,13 @@ import { PANEL_SHADOW } from "@/config/theme"
 const panelVariants = cva("rounded-3xl px-6 py-8 transition-all duration-200 backdrop-blur-xl", {
   variants: {
     variant: {
-      dark: "bg-[#0A0A0C] text-zinc-50 border border-[#C9A227]/30 shadow-[0_18px_45px_rgba(0,0,0,0.6)] ring-1 ring-[rgba(201,162,39,0.12)]",
+      dark: "bg-[#0A0A0C]/95 text-zinc-50 border border-[rgba(201,162,39,0.22)] shadow-[0_0_32px_rgba(201,162,39,0.18)] ring-1 ring-[rgba(201,162,39,0.18)]",
       light: "bg-white/90 text-zinc-900 border border-[#f5c76a3d] shadow-[0_12px_32px_rgba(0,0,0,0.08)]",
       glass: "bg-white/80 text-zinc-900 border border-[#f5c76a3d] shadow-sm",
       subtle: "bg-white/70 text-zinc-900 border border-[#f5c76a3d] shadow-none",
-      default: "bg-[#0A0A0C] text-zinc-50 border border-[#C9A227]/30 shadow-[0_18px_45px_rgba(0,0,0,0.6)] ring-1 ring-[rgba(201,162,39,0.12)]",
+      default: "bg-[#0A0A0C]/95 text-zinc-50 border border-[rgba(201,162,39,0.22)] shadow-[0_0_32px_rgba(201,162,39,0.18)] ring-1 ring-[rgba(201,162,39,0.18)]",
       bordered: "bg-white/90 text-zinc-900 border border-[#f5c76a3d] shadow-[0_12px_32px_rgba(0,0,0,0.08)]",
-      elevated: "bg-[#0A0A0C] text-zinc-50 border border-[#C9A227]/35 shadow-[0_22px_55px_rgba(0,0,0,0.72)] ring-1 ring-[rgba(201,162,39,0.12)]",
+      elevated: "bg-[#0A0A0C]/95 text-zinc-50 border border-[rgba(201,162,39,0.22)] shadow-[0_0_48px_rgba(201,162,39,0.25)] ring-1 ring-[rgba(201,162,39,0.18)]",
     },
   },
   defaultVariants: {

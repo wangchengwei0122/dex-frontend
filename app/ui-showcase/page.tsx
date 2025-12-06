@@ -21,15 +21,15 @@ const TokenButton = ({ label }: { label: string }) => (
 
 export default function UIShowcasePage() {
   return (
-    <div className="min-h-screen  from-zinc-50 via-zinc-50 to-zinc-100 text-zinc-900">
+    <div className="min-h-screen bg-[#050507] text-zinc-50">
       <div className="mx-auto max-w-6xl px-4 py-10 space-y-8">
         <header className="space-y-4">
-          <div className="inline-flex items-center gap-2 rounded-full border border-amber-300/50 bg-white/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-amber-600 shadow-sm backdrop-blur">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#C9A227]/40 bg-[#141417] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#C9A227] shadow-[0_0_18px_rgba(201,162,39,0.35)] backdrop-blur">
             Black & Gold DEX Theme
           </div>
           <div className="space-y-2">
-            <h1 className="text-3xl font-semibold text-zinc-900">DEX Design System</h1>
-            <p className="max-w-3xl text-sm text-zinc-600">
+            <h1 className="text-3xl font-semibold text-zinc-50">DEX Design System</h1>
+            <p className="max-w-3xl text-sm text-zinc-400">
               High-contrast trading UI with bright gold accents, crisp black surfaces, and glassy inputs for a premium Web3 exchange experience.
             </p>
           </div>
@@ -41,7 +41,7 @@ export default function UIShowcasePage() {
         </header>
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <AppPanel variant="light" className="space-y-5">
+          <AppPanel variant="dark" className="space-y-5">
             <AppSectionTitle withDivider>Buttons</AppSectionTitle>
             <div className="space-y-4">
               <div>
@@ -75,7 +75,7 @@ export default function UIShowcasePage() {
             </div>
           </AppPanel>
 
-          <AppPanel variant="light" className="space-y-5">
+          <AppPanel variant="dark" className="space-y-5">
             <AppSectionTitle withDivider>Inputs</AppSectionTitle>
             <div className="space-y-3">
               <div>
@@ -100,7 +100,7 @@ export default function UIShowcasePage() {
             </div>
           </AppPanel>
 
-          <AppPanel variant="light" className="space-y-5">
+          <AppPanel variant="dark" className="space-y-5">
             <AppSectionTitle withDivider>Badges & Chips</AppSectionTitle>
             <div className="space-y-4">
               <div>
@@ -133,41 +133,41 @@ export default function UIShowcasePage() {
             </div>
           </AppPanel>
 
-          <AppPanel variant="light" className="space-y-5">
+          <AppPanel variant="dark" className="space-y-5">
             <AppSectionTitle withDivider>Cards</AppSectionTitle>
             <div className="grid gap-3 md:grid-cols-3">
               <AppCard variant="default">
                 <AppCardHeader className="gap-1">
-                  <AppCardTitle className="text-sm text-zinc-900">Default Card</AppCardTitle>
-                  <AppCardDescription className="text-xs text-zinc-500">Bright glass surface</AppCardDescription>
+                  <AppCardTitle className="text-sm text-zinc-50">Default Card</AppCardTitle>
+                  <AppCardDescription className="text-xs text-zinc-400">Bright glass surface</AppCardDescription>
                 </AppCardHeader>
-                <AppCardContent className="text-2xl font-semibold text-zinc-900">1.234 ETH</AppCardContent>
+                <AppCardContent className="text-2xl font-semibold text-zinc-50">1.234 ETH</AppCardContent>
               </AppCard>
               <AppCard variant="bordered">
                 <AppCardHeader className="gap-1">
-                  <AppCardTitle className="text-sm text-zinc-900">Gold Border</AppCardTitle>
-                  <AppCardDescription className="text-xs text-zinc-500">Amber accent outline</AppCardDescription>
+                  <AppCardTitle className="text-sm text-zinc-50">Gold Border</AppCardTitle>
+                  <AppCardDescription className="text-xs text-zinc-400">Amber accent outline</AppCardDescription>
                 </AppCardHeader>
-                <AppCardContent className="text-2xl font-semibold text-zinc-900">+$235.4</AppCardContent>
+                <AppCardContent className="text-2xl font-semibold text-zinc-50">+$235.4</AppCardContent>
               </AppCard>
               <AppCard variant="elevated">
                 <AppCardHeader className="gap-1">
-                  <AppCardTitle className="text-sm text-zinc-900">Elevated</AppCardTitle>
-                  <AppCardDescription className="text-xs text-zinc-500">Deeper shadow</AppCardDescription>
+                  <AppCardTitle className="text-sm text-zinc-50">Elevated</AppCardTitle>
+                  <AppCardDescription className="text-xs text-zinc-400">Deeper shadow</AppCardDescription>
                 </AppCardHeader>
-                <AppCardContent className="text-2xl font-semibold text-zinc-900">ROI 12.4%</AppCardContent>
+                <AppCardContent className="text-2xl font-semibold text-zinc-50">ROI 12.4%</AppCardContent>
               </AppCard>
             </div>
           </AppPanel>
         </div>
 
-        <AppPanel variant="light" className="space-y-5">
+        <AppPanel variant="dark" className="space-y-5">
           <AppSectionTitle withDivider>Typography</AppSectionTitle>
           <div className="space-y-2">
-            <AppSectionTitle as="h1" className="text-zinc-900">Heading 1</AppSectionTitle>
-            <AppSectionTitle as="h2" className="text-zinc-900">Heading 2</AppSectionTitle>
-            <AppSectionTitle as="h3" className="text-zinc-900">Heading 3</AppSectionTitle>
-            <div className="text-sm font-medium text-zinc-800">Body text on bright surfaces</div>
+            <AppSectionTitle as="h1" className="text-zinc-50">Heading 1</AppSectionTitle>
+            <AppSectionTitle as="h2" className="text-zinc-50">Heading 2</AppSectionTitle>
+            <AppSectionTitle as="h3" className="text-zinc-200">Heading 3</AppSectionTitle>
+            <div className="text-sm font-medium text-zinc-200">Body text on dark surfaces</div>
             <div className="text-xs text-zinc-500">Muted caption in zinc palette</div>
           </div>
         </AppPanel>

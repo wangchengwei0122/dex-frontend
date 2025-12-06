@@ -12,8 +12,8 @@ const appButtonVariants = cva(
       variant: {
         primary: "bg-[#0A0A0C] text-zinc-50 shadow-[0_0_32px_rgba(201,162,39,0.28)] border border-[color:rgba(201,162,39,0.65)] hover:bg-zinc-900 hover:border-[#D4A017] hover:text-white active:translate-y-[0.5px] relative overflow-hidden",
         secondary: "bg-amber-50 text-zinc-900 border border-[color:rgba(201,162,39,0.35)] hover:bg-amber-100 hover:border-[color:rgba(201,162,39,0.55)]",
-        ghost: "bg-transparent text-[var(--app-gold)] hover:bg-[rgba(12,12,14,0.05)] border-transparent",
-        outline: "bg-transparent text-[var(--app-gold)] border border-[color:rgba(201,162,39,0.55)] hover:border-[var(--app-gold-hover)] hover:bg-[rgba(201,162,39,0.06)]",
+        ghost: "bg-transparent text-[#C9A227] border border-[#C9A227]/40 hover:border-[#C9A227] hover:bg-[rgba(201,162,39,0.06)]",
+        outline: "bg-transparent text-[#C9A227] border border-[#C9A227]/60 hover:border-[#F6D27A] hover:bg-[rgba(201,162,39,0.10)]",
         danger: "bg-rose-500 text-white border border-rose-500/80 hover:bg-rose-600",
       },
       size: {
