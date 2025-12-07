@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useChainId, useConnections } from "wagmi"
 import { AppPanel } from "@/components/app/app-panel"
 import { SwapHeader } from "./SwapHeader"
@@ -11,65 +11,9 @@ import { SwapActionButton } from "./SwapActionButton"
 import { TokenSelectDialog } from "./TokenSelectDialog"
 import { SwapSettingsDialog } from "./SwapSettingsDialog"
 import { useSwapQuote } from "@/lib/hooks/useSwapQuote"
+import { useTokenBalances } from "@/lib/hooks/useTokenBalances"
+import { getTokensByChainId, tokenConfigToToken } from "@/config/tokens"
 import type { Token, Side, SwapSettings, SwapReviewParams } from "./types"
-
-// Mock 数据
-const MOCK_TOKENS: Token[] = [
-  {
-    address: "0x0000000000000000000000000000000000000000",
-    symbol: "ETH",
-    name: "Ethereum",
-    decimals: 18,
-  },
-  {
-    address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-    symbol: "USDC",
-    name: "USD Coin",
-    decimals: 6,
-  },
-  {
-    address: "0xdAC17F958D2ee523a2206206994597C13D831ec7",
-    symbol: "USDT",
-    name: "Tether USD",
-    decimals: 6,
-  },
-  {
-    address: "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
-    symbol: "WBTC",
-    name: "Wrapped Bitcoin",
-    decimals: 8,
-  },
-]
-
-const MOCK_BALANCES: Record<string, number> = {
-  ETH: 1.234,
-  USDC: 5000.0,
-  USDT: 2500.0,
-  WBTC: 0.05,
-}
-
-const MOCK_RATES: Record<string, Record<string, number>> = {
-  ETH: {
-    USDC: 3524.5,
-    USDT: 3524.5,
-    WBTC: 0.055,
-  },
-  USDC: {
-    ETH: 1 / 3524.5,
-    USDT: 1.0,
-    WBTC: 0.0000156,
-  },
-  USDT: {
-    ETH: 1 / 3524.5,
-    USDC: 1.0,
-    WBTC: 0.0000156,
-  },
-  WBTC: {
-    ETH: 1 / 0.055,
-    USDC: 64090.0,
-    USDT: 64090.0,
-  },
-}
 
 export interface SwapCardProps {
   tokens?: Token[]
@@ -79,7 +23,7 @@ export interface SwapCardProps {
 }
 
 export function SwapCard({
-  tokens = MOCK_TOKENS,
+  tokens: propTokens,
   defaultFromSymbol = "ETH",
   defaultToSymbol = "USDC",
   onReview,
@@ -89,16 +33,35 @@ export function SwapCard({
   const connections = useConnections()
   const isConnected = connections.length > 0
 
-  // State
-  const [fromToken, setFromToken] = useState<Token | null>(
-    tokens.find((t) => t.symbol === defaultFromSymbol) || null
+  // 获取当前链的 token 配置
+  const tokenConfigs = useMemo(() => getTokensByChainId(chainId), [chainId])
+
+  // 转换为组件使用的 Token 类型
+  const tokens = useMemo(
+    () => propTokens || tokenConfigs.map(tokenConfigToToken),
+    [propTokens, tokenConfigs]
   )
-  const [toToken, setToToken] = useState<Token | null>(
-    tokens.find((t) => t.symbol === defaultToSymbol) || null
-  )
+
+  // 获取真实余额
+  const { data: balances, isLoading: balancesLoading } = useTokenBalances({
+    tokens: tokenConfigs,
+  })
+
+  // 计算默认 token
+  const defaultFromToken = useMemo(() => {
+    return tokens.find((t) => t.symbol === defaultFromSymbol) || tokens[0] || null
+  }, [tokens, defaultFromSymbol])
+
+  const defaultToToken = useMemo(() => {
+    const to = tokens.find((t) => t.symbol === defaultToSymbol) || tokens[1] || tokens[0] || null
+    return to && to.address !== defaultFromToken?.address ? to : null
+  }, [tokens, defaultToSymbol, defaultFromToken])
+
+  // State - 使用函数初始化，只在首次渲染时设置
+  const [fromToken, setFromToken] = useState<Token | null>(() => defaultFromToken)
+  const [toToken, setToToken] = useState<Token | null>(() => defaultToToken)
   const [fromAmount, setFromAmount] = useState("")
   const [toAmount, setToAmount] = useState("")
-  const [balances] = useState(MOCK_BALANCES)
   const [settings, setSettings] = useState<SwapSettings>({
     slippageBps: 30,
     deadlineMinutes: 30,
@@ -107,6 +70,22 @@ export function SwapCard({
   const [tokenDialogOpen, setTokenDialogOpen] = useState(false)
   const [tokenDialogSide, setTokenDialogSide] = useState<Side | null>(null)
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false)
+
+  // 当 tokens 或 chainId 变化时，如果当前 token 不在新列表中，重置为默认值
+  useEffect(() => {
+    if (tokens.length > 0) {
+      const fromTokenExists = fromToken && tokens.some((t) => t.address === fromToken.address)
+      const toTokenExists = toToken && tokens.some((t) => t.address === toToken.address)
+
+      if (!fromTokenExists) {
+        setFromToken(defaultFromToken)
+      }
+      if (!toTokenExists) {
+        setToToken(defaultToToken)
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chainId, tokens.length]) // 只在 chainId 或 token 数量变化时更新
 
   // 链上报价
   const {
@@ -122,14 +101,16 @@ export function SwapCard({
     enabled: isConnected, // 只有在连接钱包后才启用报价
   })
 
-  // 使用链上报价更新 toAmount
-  useEffect(() => {
+  // 派生 toAmount - 优先使用链上报价
+  const displayToAmount = useMemo(() => {
     if (amountOutFormatted) {
-      setToAmount(amountOutFormatted)
-    } else if (!fromAmount || !fromToken || !toToken) {
-      setToAmount("")
+      return amountOutFormatted
     }
-  }, [amountOutFormatted, fromAmount, fromToken, toToken])
+    if (!fromAmount || !fromToken || !toToken) {
+      return ""
+    }
+    return toAmount
+  }, [amountOutFormatted, fromAmount, fromToken, toToken, toAmount])
 
   // Handlers
   const handleFromAmountChange = (value: string) => {
@@ -172,7 +153,7 @@ export function SwapCard({
       fromToken,
       toToken,
       fromAmount,
-      toAmount,
+      toAmount: displayToAmount,
       settings,
     }
 
@@ -199,8 +180,10 @@ export function SwapCard({
       return { canSubmit: false, errorMessage: "Invalid amount" }
     }
 
-    const balance = balances[fromToken.symbol] || 0
-    if (fromAmountNum > balance) {
+    // 使用真实余额检查
+    const balanceStr = balances[fromToken.address] || "0"
+    const balance = Number(balanceStr)
+    if (isNaN(balance) || fromAmountNum > balance) {
       return { canSubmit: false, errorMessage: "Insufficient balance" }
     }
 
@@ -215,7 +198,7 @@ export function SwapCard({
     }
 
     // 没有报价结果
-    if (!toAmount || toAmount === "0") {
+    if (!displayToAmount || displayToAmount === "0") {
       return { canSubmit: false, errorMessage: "No quote available" }
     }
 
@@ -226,12 +209,12 @@ export function SwapCard({
 
   // Rate text - 基于实际报价计算
   const getRateText = () => {
-    if (!fromToken || !toToken || !fromAmount || !toAmount) {
+    if (!fromToken || !toToken || !fromAmount || !displayToAmount) {
       return undefined
     }
 
     const fromAmountNum = Number(fromAmount)
-    const toAmountNum = Number(toAmount)
+    const toAmountNum = Number(displayToAmount)
 
     if (fromAmountNum > 0 && toAmountNum > 0) {
       const rate = toAmountNum / fromAmountNum
@@ -255,7 +238,13 @@ export function SwapCard({
             label="From"
             token={fromToken}
             amount={fromAmount}
-            balance={fromToken ? balances[fromToken.symbol] : undefined}
+            balance={
+              fromToken && balances[fromToken.address]
+                ? Number(balances[fromToken.address])
+                : balancesLoading
+                  ? undefined
+                  : 0
+            }
             onAmountChange={handleFromAmountChange}
             onClickToken={() => handleOpenTokenDialog("from")}
           />
@@ -266,8 +255,14 @@ export function SwapCard({
             side="to"
             label="To"
             token={toToken}
-            amount={toAmount}
-            balance={toToken ? balances[toToken.symbol] : undefined}
+            amount={displayToAmount}
+            balance={
+              toToken && balances[toToken.address]
+                ? Number(balances[toToken.address])
+                : balancesLoading
+                  ? undefined
+                  : 0
+            }
             readOnlyAmount={true}
             onClickToken={() => handleOpenTokenDialog("to")}
           />
