@@ -1,7 +1,8 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
-import { useChainId, useConnections } from "wagmi"
+import { useChainId, useConnections, useConnection } from "wagmi"
+import { parseUnits } from "viem"
 import { AppPanel } from "@/components/app/app-panel"
 import { SwapHeader } from "./SwapHeader"
 import { SwapTokenRow } from "./SwapTokenRow"
@@ -12,8 +13,12 @@ import { TokenSelectDialog } from "./TokenSelectDialog"
 import { SwapSettingsDialog } from "./SwapSettingsDialog"
 import { useSwapQuote } from "@/lib/hooks/useSwapQuote"
 import { useTokenBalances } from "@/lib/hooks/useTokenBalances"
+import { useTokenAllowance } from "@/lib/hooks/useTokenAllowance"
+import { useTokenApproval } from "@/lib/hooks/useTokenApproval"
 import { getTokensByChainId, tokenConfigToToken } from "@/config/tokens"
+import { getUniswapV2RouterAddress } from "@/config/contracts"
 import type { Token, Side, SwapSettings, SwapReviewParams } from "./types"
+import type { TokenConfig } from "@/config/tokens"
 
 export interface SwapCardProps {
   tokens?: Token[]
@@ -32,6 +37,7 @@ export function SwapCard({
   const chainId = useChainId()
   const connections = useConnections()
   const isConnected = connections.length > 0
+  const { address } = useConnection()
 
   // 获取当前链的 token 配置
   const tokenConfigs = useMemo(() => getTokensByChainId(chainId), [chainId])
@@ -112,6 +118,67 @@ export function SwapCard({
     return toAmount
   }, [amountOutFormatted, fromAmount, fromToken, toToken, toAmount])
 
+  // 获取 Router 地址
+  const routerAddress = useMemo(() => {
+    return getUniswapV2RouterAddress(chainId)
+  }, [chainId])
+
+  // 获取 fromToken 对应的 TokenConfig
+  const fromTokenConfig = useMemo<TokenConfig | null>(() => {
+    if (!fromToken) return null
+    return tokenConfigs.find((config) => config.address === fromToken.address) || null
+  }, [fromToken, tokenConfigs])
+
+  // 获取 Token Allowance
+  const {
+    allowance,
+    isLoading: allowanceLoading,
+    refetch: refetchAllowance,
+  } = useTokenAllowance({
+    token: fromTokenConfig,
+    owner: address,
+    spender: routerAddress,
+    chainId,
+    enabled: Boolean(fromTokenConfig && address && routerAddress && isConnected),
+  })
+
+  // Token Approval Hook
+  const {
+    approveMax,
+    isPending: approvePending,
+    isSuccess: approveSuccess,
+    isError: approveError,
+    error: approveErrorObj,
+  } = useTokenApproval({
+    token: fromTokenConfig,
+    owner: address,
+    spender: routerAddress,
+    chainId,
+  })
+
+  // 在 Approve 成功后刷新 allowance
+  useEffect(() => {
+    if (approveSuccess) {
+      refetchAllowance()
+    }
+  }, [approveSuccess, refetchAllowance])
+
+  // 计算 fromAmount 的 bigint 值（用于比较 allowance）
+  const fromAmountInWei = useMemo(() => {
+    if (!fromToken || !fromAmount || fromAmount === "0") {
+      return 0n
+    }
+    try {
+      const amountNum = Number(fromAmount)
+      if (isNaN(amountNum) || amountNum <= 0) {
+        return 0n
+      }
+      return parseUnits(fromAmount, fromToken.decimals)
+    } catch {
+      return 0n
+    }
+  }, [fromToken, fromAmount])
+
   // Handlers
   const handleFromAmountChange = (value: string) => {
     setFromAmount(value)
@@ -161,51 +228,203 @@ export function SwapCard({
     onReview?.(params)
   }
 
-  // Button state logic
-  const getButtonState = () => {
+  // 决定当前按钮的主要操作
+  const primaryAction = useMemo(() => {
+    // Case 1: 钱包未连接
     if (!isConnected) {
-      return { canSubmit: false, errorMessage: undefined }
+      return {
+        label: "Connect Wallet",
+        disabled: false,
+        onClick: () => {}, // 使用 wagmi 的连接状态，这里不需要手动处理
+        type: "connect" as const,
+      }
     }
 
+    // Case 2: 基础校验
     if (!fromToken || !toToken) {
-      return { canSubmit: false, errorMessage: "Select tokens" }
+      return {
+        label: "Select tokens",
+        disabled: true,
+        onClick: () => {},
+        type: "error" as const,
+      }
     }
 
     if (!fromAmount || fromAmount === "0") {
-      return { canSubmit: false, errorMessage: "Enter an amount" }
+      return {
+        label: "Enter an amount",
+        disabled: true,
+        onClick: () => {},
+        type: "error" as const,
+      }
     }
 
     const fromAmountNum = Number(fromAmount)
     if (isNaN(fromAmountNum)) {
-      return { canSubmit: false, errorMessage: "Invalid amount" }
+      return {
+        label: "Invalid amount",
+        disabled: true,
+        onClick: () => {},
+        type: "error" as const,
+      }
     }
 
     // 使用真实余额检查
     const balanceStr = balances[fromToken.address] || "0"
     const balance = Number(balanceStr)
     if (isNaN(balance) || fromAmountNum > balance) {
-      return { canSubmit: false, errorMessage: "Insufficient balance" }
+      return {
+        label: "Insufficient balance",
+        disabled: true,
+        onClick: () => {},
+        type: "error" as const,
+      }
     }
 
+    // Case 3: 原生币不需要 approve，直接走 Swap
+    if (fromTokenConfig?.isNative) {
+      // 报价加载中
+      if (isLoadingQuote || isFetchingQuote) {
+        return {
+          label: "Loading...",
+          disabled: true,
+          onClick: () => {},
+          type: "loading" as const,
+        }
+      }
+
+      // 报价错误
+      if (quoteError) {
+        return {
+          label: quoteError.message,
+          disabled: true,
+          onClick: () => {},
+          type: "error" as const,
+        }
+      }
+
+      // 没有报价结果
+      if (!displayToAmount || displayToAmount === "0") {
+        return {
+          label: "No quote available",
+          disabled: true,
+          onClick: () => {},
+          type: "error" as const,
+        }
+      }
+
+      return {
+        label: "Swap",
+        disabled: false,
+        onClick: handleReview,
+        type: "swap" as const,
+      }
+    }
+
+    // Case 4: ERC20 Token，需要检查 allowance
+    // 检查 allowance 加载中
+    if (allowanceLoading) {
+      return {
+        label: "Checking allowance...",
+        disabled: true,
+        onClick: () => {},
+        type: "loading" as const,
+      }
+    }
+
+    // Approve 进行中
+    if (approvePending) {
+      return {
+        label: "Approving...",
+        disabled: true,
+        onClick: () => {},
+        type: "approving" as const,
+      }
+    }
+
+    // 如果 allowance 不足，显示 Approve 按钮
+    if (allowance < fromAmountInWei) {
+      return {
+        label: `Approve ${fromToken.symbol}`,
+        disabled: false,
+        onClick: async () => {
+          try {
+            await approveMax()
+          } catch (err) {
+            // 错误已经在 hook 中处理
+            console.error("Approve failed:", err)
+          }
+        },
+        type: "approve" as const,
+      }
+    }
+
+    // Allowance 充足，可以 Swap
     // 报价加载中
     if (isLoadingQuote || isFetchingQuote) {
-      return { canSubmit: false, errorMessage: undefined }
+      return {
+        label: "Loading...",
+        disabled: true,
+        onClick: () => {},
+        type: "loading" as const,
+      }
     }
 
     // 报价错误
     if (quoteError) {
-      return { canSubmit: false, errorMessage: quoteError.message }
+      return {
+        label: quoteError.message,
+        disabled: true,
+        onClick: () => {},
+        type: "error" as const,
+      }
     }
 
     // 没有报价结果
     if (!displayToAmount || displayToAmount === "0") {
-      return { canSubmit: false, errorMessage: "No quote available" }
+      return {
+        label: "No quote available",
+        disabled: true,
+        onClick: () => {},
+        type: "error" as const,
+      }
     }
 
-    return { canSubmit: true, errorMessage: undefined }
-  }
+    return {
+      label: "Swap",
+      disabled: false,
+      onClick: handleReview,
+      type: "swap" as const,
+    }
+  }, [
+    isConnected,
+    fromToken,
+    toToken,
+    fromAmount,
+    balances,
+    fromTokenConfig,
+    allowanceLoading,
+    allowance,
+    fromAmountInWei,
+    approvePending,
+    isLoadingQuote,
+    isFetchingQuote,
+    quoteError,
+    displayToAmount,
+    approveMax,
+    handleReview,
+  ])
 
-  const { canSubmit, errorMessage } = getButtonState()
+  // 兼容旧的按钮状态逻辑（用于错误显示）
+  const errorMessage = useMemo(() => {
+    if (primaryAction.type === "error") {
+      return primaryAction.label
+    }
+    if (approveError && approveErrorObj) {
+      return `Approve failed: ${approveErrorObj.message}`
+    }
+    return undefined
+  }, [primaryAction, approveError, approveErrorObj])
 
   // Rate text - 基于实际报价计算
   const getRateText = () => {
@@ -278,11 +497,20 @@ export function SwapCard({
 
           <SwapActionButton
             isConnected={isConnected}
-            canSubmit={canSubmit}
+            canSubmit={primaryAction.type === "swap" || primaryAction.type === "approve"}
             errorMessage={errorMessage}
+            loading={primaryAction.type === "loading" || primaryAction.type === "approving"}
+            buttonLabel={primaryAction.label}
             onConnect={() => {}} // 使用 wagmi 的连接状态，这里不需要手动处理
-            onReview={handleReview}
+            onReview={primaryAction.onClick}
           />
+
+          {/* Approve 错误提示 */}
+          {approveError && approveErrorObj && (
+            <div className="text-sm text-error-foreground text-center mt-2">
+              Approve failed: {approveErrorObj.message}
+            </div>
+          )}
         </div>
       </AppPanel>
 
