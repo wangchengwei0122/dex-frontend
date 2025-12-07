@@ -17,16 +17,7 @@ import { AppDivider } from "@/components/app/app-divider"
 import { AppDialog, AppDialogTrigger, AppDialogContent } from "@/components/app/app-dialog"
 import { AppPopover, AppPopoverTrigger, AppPopoverContent } from "@/components/app/app-popover"
 import { Search, Settings, Info, ChevronDown } from "lucide-react"
-
-const TokenButton = ({ label }: { label: string }) => (
-  <AppButton
-    variant="outline"
-    size="sm"
-    className="rounded-full bg-[#0A0A0C] text-[#C9A227] border border-[#f5c76a80] px-4 py-2 text-[13px] shadow-[0_0_18px_rgba(201,162,39,0.12)] hover:bg-black/60"
-  >
-    {label}
-  </AppButton>
-)
+import { TokenButton } from "@/components/global/tokenButton"
 
 export default function UIShowcasePage() {
   return (
