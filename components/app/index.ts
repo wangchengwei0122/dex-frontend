@@ -25,4 +25,5 @@ export {
   AppPopoverAnchor,
   type AppPopoverContentProps,
 } from "./app-popover"
+export { AppSwitch, type AppSwitchProps } from "./app-switch"
 

@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { AppButton } from "@/components/app/app-button"
 import {
   AppCard,
@@ -16,10 +17,15 @@ import { AppPanel } from "@/components/app/app-panel"
 import { AppDivider } from "@/components/app/app-divider"
 import { AppDialog, AppDialogTrigger, AppDialogContent } from "@/components/app/app-dialog"
 import { AppPopover, AppPopoverTrigger, AppPopoverContent } from "@/components/app/app-popover"
+import { AppSwitch } from "@/components/app/app-switch"
 import { Search, Settings, Info, ChevronDown } from "lucide-react"
 import { TokenButton } from "@/components/global/tokenButton"
 
 export default function UIShowcasePage() {
+  const [switch1, setSwitch1] = useState(false)
+  const [switch2, setSwitch2] = useState(true)
+  const [switch3, setSwitch3] = useState(false)
+
   return (
     <div className="min-h-screen bg-[#050507] text-zinc-50">
       <div className="mx-auto max-w-6xl px-4 py-10 space-y-8">
@@ -117,6 +123,92 @@ export default function UIShowcasePage() {
               <div>
                 <AppFieldLabel>Disabled</AppFieldLabel>
                 <AppInput disabled placeholder="Disabled" />
+              </div>
+            </div>
+          </AppPanel>
+
+          <AppPanel variant="dark" className="space-y-5">
+            <AppSectionTitle withDivider>Switches</AppSectionTitle>
+            <div className="space-y-4">
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 mb-3">
+                  Variants
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <AppFieldLabel className="mb-0">Default variant</AppFieldLabel>
+                    <AppSwitch checked={switch1} onCheckedChange={setSwitch1} />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <AppFieldLabel className="mb-0">Primary variant (checked)</AppFieldLabel>
+                    <AppSwitch checked={switch2} onCheckedChange={setSwitch2} variant="primary" />
+                  </div>
+                </div>
+              </div>
+              <AppDivider className="bg-amber-200/60" />
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 mb-3">
+                  Sizes
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <AppFieldLabel className="mb-0">Small</AppFieldLabel>
+                    <AppSwitch size="sm" />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <AppFieldLabel className="mb-0">Medium (default)</AppFieldLabel>
+                    <AppSwitch size="md" />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <AppFieldLabel className="mb-0">Large</AppFieldLabel>
+                    <AppSwitch size="lg" />
+                  </div>
+                </div>
+              </div>
+              <AppDivider className="bg-amber-200/60" />
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 mb-3">
+                  States
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <AppFieldLabel className="mb-0">Default</AppFieldLabel>
+                    <AppSwitch checked={switch3} onCheckedChange={setSwitch3} />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <AppFieldLabel className="mb-0 text-zinc-600">Disabled</AppFieldLabel>
+                    <AppSwitch disabled />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <AppFieldLabel className="mb-0 text-zinc-600">Disabled (checked)</AppFieldLabel>
+                    <AppSwitch disabled checked />
+                  </div>
+                </div>
+              </div>
+              <AppDivider className="bg-amber-200/60" />
+              <div>
+                <div className="text-xs font-semibold uppercase tracking-[0.12em] text-zinc-500 mb-3">
+                  Use Case Example
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <AppFieldLabel className="mb-0 flex items-center gap-2">
+                        1-click swaps
+                        <span className="text-xs text-zinc-500">ⓘ</span>
+                      </AppFieldLabel>
+                      <p className="text-xs text-zinc-500">Skip review step for faster swaps</p>
+                    </div>
+                    <AppSwitch variant="primary" />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <AppFieldLabel className="mb-0">Dark mode</AppFieldLabel>
+                      <p className="text-xs text-zinc-500">Toggle dark/light theme</p>
+                    </div>
+                    <AppSwitch checked variant="primary" />
+                  </div>
+                </div>
               </div>
             </div>
           </AppPanel>
