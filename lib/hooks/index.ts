@@ -11,4 +11,6 @@ export { useTokenAllowance } from './useTokenAllowance'
 export type { UseTokenAllowanceParams, UseTokenAllowanceResult } from './useTokenAllowance'
 export { useTokenApproval } from './useTokenApproval'
 export type { UseTokenApprovalParams, UseTokenApprovalResult } from './useTokenApproval'
+export { useSwap } from './useSwap'
+export type { UseSwapParams, UseSwapResult, SwapStatus } from './useSwap'
 

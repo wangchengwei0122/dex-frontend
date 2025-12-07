@@ -23,7 +23,8 @@ const appButtonVariants = cva(
         // danger:"bg-[#b91c1c] text-rose-50 border border-rose-500/80 hover:bg-[#dc2626] hover:border-rose-400/90 shadow-[0_0_22px_rgba(185,28,28,0.45)]",
         // danger:"bg-[var(--error)] text-white border border-[var(--error-border)] shadow-[var(--error-glow)] hover:brightness-110",
 
-        danger:"bg-[var(--error)] text-white border border-[color:var(--error-border)] shadow-[var(--error-glow)] hover:brightness-110",
+        danger:
+          "bg-[var(--error)] text-white border border-[color:var(--error-border)] shadow-[var(--error-glow)] hover:brightness-110",
       },
       size: {
         sm: "h-9 px-4 text-sm",
@@ -39,8 +40,7 @@ const appButtonVariants = cva(
 )
 
 export interface AppButtonProps
-  extends Omit<ButtonProps, "variant" | "size">,
-    VariantProps<typeof appButtonVariants> {
+  extends Omit<ButtonProps, "variant" | "size">, VariantProps<typeof appButtonVariants> {
   loading?: boolean
 }
 

@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react'
-import { useWriteContract, useWaitForTransactionReceipt, useSimulateContract } from 'wagmi'
-import { erc20Abi, maxUint256, type Address } from 'viem'
-import type { TokenConfig } from '@/config/tokens'
+import { useState, useEffect } from "react"
+import { useWriteContract, useWaitForTransactionReceipt, useSimulateContract } from "wagmi"
+import { erc20Abi, maxUint256, type Address } from "viem"
+import type { TokenConfig } from "@/config/tokens"
 
 export interface UseTokenApprovalParams {
   /** Token 配置 */
@@ -32,7 +32,7 @@ export interface UseTokenApprovalResult {
 /**
  * ERC20 Token 授权 Hook
  * 用于执行 approve 操作，授权 Router 合约使用用户的 Token
- * 
+ *
  * @example
  * ```tsx
  * const { approveMax, isPending, isSuccess, error } = useTokenApproval({
@@ -41,7 +41,7 @@ export interface UseTokenApprovalResult {
  *   spender: routerAddress,
  *   chainId,
  * })
- * 
+ *
  * // 在按钮点击时调用
  * await approveMax()
  * ```
@@ -59,7 +59,7 @@ export function useTokenApproval({
   const { data: simulateData } = useSimulateContract({
     address: token && !token.isNative ? (token.address as Address) : undefined,
     abi: erc20Abi,
-    functionName: 'approve',
+    functionName: "approve",
     args: spender ? [spender, maxUint256] : undefined,
     chainId,
     query: {
@@ -99,20 +99,20 @@ export function useTokenApproval({
   // 更新错误状态
   useEffect(() => {
     if (isWriteError && writeError) {
-      const errorMessage = writeError.message || '交易失败'
+      const errorMessage = writeError.message || "交易失败"
       // 处理用户拒绝交易的情况
       if (
-        errorMessage.includes('User rejected') ||
-        errorMessage.includes('user rejected') ||
-        errorMessage.includes('rejected') ||
-        errorMessage.includes('denied')
+        errorMessage.includes("User rejected") ||
+        errorMessage.includes("user rejected") ||
+        errorMessage.includes("rejected") ||
+        errorMessage.includes("denied")
       ) {
-        setError(new Error('用户拒绝了交易'))
+        setError(new Error("用户拒绝了交易"))
       } else {
         setError(new Error(errorMessage))
       }
     } else if (isReceiptError && receiptError) {
-      setError(new Error(receiptError.message || '交易确认失败'))
+      setError(new Error(receiptError.message || "交易确认失败"))
     } else if (isReceiptSuccess) {
       setError(null) // 成功时清除错误
     }
@@ -131,7 +131,7 @@ export function useTokenApproval({
 
     // 检查是否有模拟数据
     if (!simulateData?.request) {
-      setError(new Error('无法准备交易，请检查网络连接'))
+      setError(new Error("无法准备交易，请检查网络连接"))
       return
     }
 
@@ -142,14 +142,14 @@ export function useTokenApproval({
       // 如果用户拒绝交易，错误会在 useEffect 中被处理
     } catch (err: any) {
       // 捕获同步错误（虽然 writeContract 通常不会抛出）
-      const errorMessage = err.message || 'Approve 失败'
+      const errorMessage = err.message || "Approve 失败"
       if (
-        errorMessage.includes('User rejected') ||
-        errorMessage.includes('user rejected') ||
-        errorMessage.includes('rejected') ||
-        errorMessage.includes('denied')
+        errorMessage.includes("User rejected") ||
+        errorMessage.includes("user rejected") ||
+        errorMessage.includes("rejected") ||
+        errorMessage.includes("denied")
       ) {
-        setError(new Error('用户拒绝了交易'))
+        setError(new Error("用户拒绝了交易"))
       } else {
         setError(new Error(errorMessage))
       }
@@ -169,4 +169,3 @@ export function useTokenApproval({
     txHash,
   }
 }
-

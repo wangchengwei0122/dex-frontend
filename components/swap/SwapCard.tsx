@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import { useChainId, useConnections, useConnection } from "wagmi"
 import { parseUnits } from "viem"
 import { AppPanel } from "@/components/app/app-panel"
@@ -15,8 +15,11 @@ import { useSwapQuote } from "@/lib/hooks/useSwapQuote"
 import { useTokenBalances } from "@/lib/hooks/useTokenBalances"
 import { useTokenAllowance } from "@/lib/hooks/useTokenAllowance"
 import { useTokenApproval } from "@/lib/hooks/useTokenApproval"
+import { useSwap } from "@/lib/hooks/useSwap"
 import { getTokensByChainId, tokenConfigToToken } from "@/config/tokens"
 import { getUniswapV2RouterAddress } from "@/config/contracts"
+import { getExplorerTxUrl } from "@/lib/utils"
+import { formatUnits } from "viem"
 import type { Token, Side, SwapSettings, SwapReviewParams } from "./types"
 import type { TokenConfig } from "@/config/tokens"
 
@@ -96,6 +99,7 @@ export function SwapCard({
   // 链上报价
   const {
     amountOutFormatted,
+    rawAmountOut,
     isLoading: isLoadingQuote,
     isFetching: isFetchingQuote,
     error: quoteError,
@@ -128,6 +132,12 @@ export function SwapCard({
     if (!fromToken) return null
     return tokenConfigs.find((config) => config.address === fromToken.address) || null
   }, [fromToken, tokenConfigs])
+
+  // 获取 toToken 对应的 TokenConfig
+  const toTokenConfig = useMemo<TokenConfig | null>(() => {
+    if (!toToken) return null
+    return tokenConfigs.find((config) => config.address === toToken.address) || null
+  }, [toToken, tokenConfigs])
 
   // 获取 Token Allowance
   const {
@@ -166,18 +176,66 @@ export function SwapCard({
   // 计算 fromAmount 的 bigint 值（用于比较 allowance）
   const fromAmountInWei = useMemo(() => {
     if (!fromToken || !fromAmount || fromAmount === "0") {
-      return 0n
+      return BigInt(0)
     }
     try {
       const amountNum = Number(fromAmount)
       if (isNaN(amountNum) || amountNum <= 0) {
-        return 0n
+        return BigInt(0)
       }
       return parseUnits(fromAmount, fromToken.decimals)
     } catch {
-      return 0n
+      return BigInt(0)
     }
   }, [fromToken, fromAmount])
+
+  // 计算 amountOutMin（考虑 slippage）
+  const amountOutMin = useMemo(() => {
+    if (!rawAmountOut || !toToken || !settings.slippageBps) {
+      return "0"
+    }
+    // slippageBps 是基点（basis points），例如 30 表示 0.3%
+    // amountOutMin = rawAmountOut * (10000 - slippageBps) / 10000
+    const slippageMultiplier = BigInt(10000 - settings.slippageBps)
+    const amountOutMinWei = (rawAmountOut * slippageMultiplier) / BigInt(10000)
+    return formatUnits(amountOutMinWei, toToken.decimals)
+  }, [rawAmountOut, toToken, settings.slippageBps])
+
+  // Swap Hook
+  const {
+    swap,
+    isPending: swapPending,
+    isSuccess: swapSuccess,
+    isError: swapError,
+    txHash: swapTxHash,
+    error: swapErrorObj,
+  } = useSwap({
+    fromToken: fromTokenConfig,
+    toToken: toTokenConfig,
+    amountIn: fromAmount,
+    amountOutMin,
+    recipient: address,
+    deadlineMinutes: settings.deadlineMinutes,
+    chainId,
+  })
+
+  // Swap 成功后的后置处理
+  useEffect(() => {
+    if (swapSuccess) {
+      // 可以在这里触发余额刷新（如果有 refetch 方法）
+      // 暂时不清空输入，让用户看到结果
+      // 如果需要清空，可以取消下面的注释
+      // setFromAmount('')
+    }
+  }, [swapSuccess])
+
+  // 获取区块浏览器链接
+  const explorerUrl = useMemo(() => {
+    if (swapSuccess && swapTxHash && chainId) {
+      return getExplorerTxUrl(chainId, swapTxHash)
+    }
+    return undefined
+  }, [swapSuccess, swapTxHash, chainId])
 
   // Handlers
   const handleFromAmountChange = (value: string) => {
@@ -213,7 +271,7 @@ export function SwapCard({
     setToAmount("")
   }
 
-  const handleReview = () => {
+  const handleReview = useCallback(() => {
     if (!fromToken || !toToken || !fromAmount) return
 
     const params: SwapReviewParams = {
@@ -226,7 +284,7 @@ export function SwapCard({
 
     console.log("Swap Review Params:", params)
     onReview?.(params)
-  }
+  }, [fromToken, toToken, fromAmount, displayToAmount, settings, onReview])
 
   // 决定当前按钮的主要操作
   const primaryAction = useMemo(() => {
@@ -360,6 +418,26 @@ export function SwapCard({
     }
 
     // Allowance 充足，可以 Swap
+    // Swap 进行中
+    if (swapPending) {
+      return {
+        label: "Swapping...",
+        disabled: true,
+        onClick: () => {},
+        type: "swapping" as const,
+      }
+    }
+
+    // Swap 成功（短暂显示，然后恢复为 Swap）
+    if (swapSuccess) {
+      return {
+        label: "Swap",
+        disabled: false,
+        onClick: handleReview,
+        type: "swap" as const,
+      }
+    }
+
     // 报价加载中
     if (isLoadingQuote || isFetchingQuote) {
       return {
@@ -390,10 +468,27 @@ export function SwapCard({
       }
     }
 
+    // 检查是否支持 Swap（只支持 ERC20 → ERC20）
+    if (fromTokenConfig?.isNative || toTokenConfig?.isNative) {
+      return {
+        label: "Swap (ERC20 only)",
+        disabled: true,
+        onClick: () => {},
+        type: "error" as const,
+      }
+    }
+
     return {
       label: "Swap",
       disabled: false,
-      onClick: handleReview,
+      onClick: async () => {
+        try {
+          await swap()
+        } catch (err) {
+          // 错误已经在 hook 中处理
+          console.error("Swap failed:", err)
+        }
+      },
       type: "swap" as const,
     }
   }, [
@@ -403,15 +498,19 @@ export function SwapCard({
     fromAmount,
     balances,
     fromTokenConfig,
+    toTokenConfig,
     allowanceLoading,
     allowance,
     fromAmountInWei,
     approvePending,
+    swapPending,
+    swapSuccess,
     isLoadingQuote,
     isFetchingQuote,
     quoteError,
     displayToAmount,
     approveMax,
+    swap,
     handleReview,
   ])
 
@@ -423,8 +522,11 @@ export function SwapCard({
     if (approveError && approveErrorObj) {
       return `Approve failed: ${approveErrorObj.message}`
     }
+    if (swapError && swapErrorObj) {
+      return `Swap failed: ${swapErrorObj.message}`
+    }
     return undefined
-  }, [primaryAction, approveError, approveErrorObj])
+  }, [primaryAction, approveError, approveErrorObj, swapError, swapErrorObj])
 
   // Rate text - 基于实际报价计算
   const getRateText = () => {
@@ -499,7 +601,11 @@ export function SwapCard({
             isConnected={isConnected}
             canSubmit={primaryAction.type === "swap" || primaryAction.type === "approve"}
             errorMessage={errorMessage}
-            loading={primaryAction.type === "loading" || primaryAction.type === "approving"}
+            loading={
+              primaryAction.type === "loading" ||
+              primaryAction.type === "approving" ||
+              primaryAction.type === "swapping"
+            }
             buttonLabel={primaryAction.label}
             onConnect={() => {}} // 使用 wagmi 的连接状态，这里不需要手动处理
             onReview={primaryAction.onClick}
@@ -509,6 +615,27 @@ export function SwapCard({
           {approveError && approveErrorObj && (
             <div className="text-sm text-error-foreground text-center mt-2">
               Approve failed: {approveErrorObj.message}
+            </div>
+          )}
+
+          {/* Swap 错误提示 */}
+          {swapError && swapErrorObj && (
+            <div className="text-sm text-error-foreground text-center mt-2">
+              Swap failed: {swapErrorObj.message}
+            </div>
+          )}
+
+          {/* Swap 成功 - 区块浏览器链接 */}
+          {swapSuccess && explorerUrl && (
+            <div className="text-xs text-center mt-2">
+              <a
+                href={explorerUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="text-gold hover:underline"
+              >
+                View on Etherscan
+              </a>
             </div>
           )}
         </div>
