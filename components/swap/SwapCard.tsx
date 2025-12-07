@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useChainId, useConnections } from "wagmi"
 import { AppPanel } from "@/components/app/app-panel"
 import { SwapHeader } from "./SwapHeader"
 import { SwapTokenRow } from "./SwapTokenRow"
@@ -9,6 +10,7 @@ import { SwapFooter } from "./SwapFooter"
 import { SwapActionButton } from "./SwapActionButton"
 import { TokenSelectDialog } from "./TokenSelectDialog"
 import { SwapSettingsDialog } from "./SwapSettingsDialog"
+import { useSwapQuote } from "@/lib/hooks/useSwapQuote"
 import type { Token, Side, SwapSettings, SwapReviewParams } from "./types"
 
 // Mock 数据
@@ -37,14 +39,14 @@ const MOCK_TOKENS: Token[] = [
     name: "Wrapped Bitcoin",
     decimals: 8,
   },
-];
+]
 
 const MOCK_BALANCES: Record<string, number> = {
   ETH: 1.234,
   USDC: 5000.0,
   USDT: 2500.0,
   WBTC: 0.05,
-};
+}
 
 const MOCK_RATES: Record<string, Record<string, number>> = {
   ETH: {
@@ -67,13 +69,13 @@ const MOCK_RATES: Record<string, Record<string, number>> = {
     USDC: 64090.0,
     USDT: 64090.0,
   },
-};
+}
 
 export interface SwapCardProps {
-  tokens?: Token[];
-  defaultFromSymbol?: string;
-  defaultToSymbol?: string;
-  onReview?: (params: SwapReviewParams) => void;
+  tokens?: Token[]
+  defaultFromSymbol?: string
+  defaultToSymbol?: string
+  onReview?: (params: SwapReviewParams) => void
 }
 
 export function SwapCard({
@@ -82,87 +84,89 @@ export function SwapCard({
   defaultToSymbol = "USDC",
   onReview,
 }: SwapCardProps) {
+  // Wagmi hooks
+  const chainId = useChainId()
+  const connections = useConnections()
+  const isConnected = connections.length > 0
+
   // State
   const [fromToken, setFromToken] = useState<Token | null>(
-    tokens.find(t => t.symbol === defaultFromSymbol) || null
-  );
+    tokens.find((t) => t.symbol === defaultFromSymbol) || null
+  )
   const [toToken, setToToken] = useState<Token | null>(
-    tokens.find(t => t.symbol === defaultToSymbol) || null
-  );
-  const [fromAmount, setFromAmount] = useState("");
-  const [toAmount, setToAmount] = useState("");
-  const [balances] = useState(MOCK_BALANCES);
+    tokens.find((t) => t.symbol === defaultToSymbol) || null
+  )
+  const [fromAmount, setFromAmount] = useState("")
+  const [toAmount, setToAmount] = useState("")
+  const [balances] = useState(MOCK_BALANCES)
   const [settings, setSettings] = useState<SwapSettings>({
     slippageBps: 30,
     deadlineMinutes: 30,
     oneClickEnabled: false,
-  });
-  const [isConnected, setIsConnected] = useState(false);
-  const [tokenDialogOpen, setTokenDialogOpen] = useState(false);
-  const [tokenDialogSide, setTokenDialogSide] = useState<Side | null>(null);
-  const [settingsDialogOpen, setSettingsDialogOpen] = useState(false);
+  })
+  const [tokenDialogOpen, setTokenDialogOpen] = useState(false)
+  const [tokenDialogSide, setTokenDialogSide] = useState<Side | null>(null)
+  const [settingsDialogOpen, setSettingsDialogOpen] = useState(false)
 
-  // Calculate toAmount when fromAmount or tokens change
+  // 链上报价
+  const {
+    amountOutFormatted,
+    isLoading: isLoadingQuote,
+    isFetching: isFetchingQuote,
+    error: quoteError,
+  } = useSwapQuote({
+    fromToken,
+    toToken,
+    amountIn: fromAmount,
+    chainId,
+    enabled: isConnected, // 只有在连接钱包后才启用报价
+  })
+
+  // 使用链上报价更新 toAmount
   useEffect(() => {
-    if (!fromToken || !toToken || !fromAmount || fromAmount === "0") {
-      setToAmount("");
-      return;
+    if (amountOutFormatted) {
+      setToAmount(amountOutFormatted)
+    } else if (!fromAmount || !fromToken || !toToken) {
+      setToAmount("")
     }
-
-    const fromAmountNum = Number(fromAmount);
-    if (isNaN(fromAmountNum)) {
-      setToAmount("");
-      return;
-    }
-
-    const rate = MOCK_RATES[fromToken.symbol]?.[toToken.symbol];
-    if (rate) {
-      const calculated = fromAmountNum * rate;
-      setToAmount(calculated.toFixed(6));
-    } else {
-      setToAmount("");
-    }
-  }, [fromAmount, fromToken, toToken]);
+  }, [amountOutFormatted, fromAmount, fromToken, toToken])
 
   // Handlers
   const handleFromAmountChange = (value: string) => {
-    setFromAmount(value);
-  };
+    setFromAmount(value)
+  }
 
   const handleOpenTokenDialog = (side: Side) => {
-    setTokenDialogSide(side);
-    setTokenDialogOpen(true);
-  };
+    setTokenDialogSide(side)
+    setTokenDialogOpen(true)
+  }
 
   const handleSelectToken = (side: Side, token: Token) => {
     if (side === "from") {
-      setFromToken(token);
+      setFromToken(token)
       // If same as toToken, clear toToken
       if (toToken?.address === token.address) {
-        setToToken(null);
+        setToToken(null)
       }
     } else {
-      setToToken(token);
+      setToToken(token)
       // If same as fromToken, clear fromToken
       if (fromToken?.address === token.address) {
-        setFromToken(null);
+        setFromToken(null)
       }
     }
-  };
+  }
 
   const handleSwitch = () => {
-    setFromToken(toToken);
-    setToToken(fromToken);
-    setFromAmount(toAmount);
-    setToAmount(fromAmount);
-  };
-
-  const handleConnect = () => {
-    setIsConnected(true);
-  };
+    setFromToken(toToken)
+    setToToken(fromToken)
+    // 切换方向时清空金额，让用户重新输入
+    setFromAmount("")
+    setToAmount("")
+  }
 
   const handleReview = () => {
-    if (!fromToken || !toToken || !fromAmount) return;
+    if (!fromToken || !toToken || !fromAmount) return
 
     const params: SwapReviewParams = {
       fromToken,
@@ -170,55 +174,75 @@ export function SwapCard({
       fromAmount,
       toAmount,
       settings,
-    };
+    }
 
-    console.log("Swap Review Params:", params);
-    onReview?.(params);
-  };
+    console.log("Swap Review Params:", params)
+    onReview?.(params)
+  }
 
   // Button state logic
   const getButtonState = () => {
     if (!isConnected) {
-      return { canSubmit: false, errorMessage: undefined };
+      return { canSubmit: false, errorMessage: undefined }
     }
 
     if (!fromToken || !toToken) {
-      return { canSubmit: false, errorMessage: "Select tokens" };
+      return { canSubmit: false, errorMessage: "Select tokens" }
     }
 
     if (!fromAmount || fromAmount === "0") {
-      return { canSubmit: false, errorMessage: "Enter an amount" };
+      return { canSubmit: false, errorMessage: "Enter an amount" }
     }
 
-    const fromAmountNum = Number(fromAmount);
+    const fromAmountNum = Number(fromAmount)
     if (isNaN(fromAmountNum)) {
-      return { canSubmit: false, errorMessage: "Invalid amount" };
+      return { canSubmit: false, errorMessage: "Invalid amount" }
     }
 
-    const balance = balances[fromToken.symbol] || 0;
+    const balance = balances[fromToken.symbol] || 0
     if (fromAmountNum > balance) {
-      return { canSubmit: false, errorMessage: "Insufficient balance" };
+      return { canSubmit: false, errorMessage: "Insufficient balance" }
     }
 
-    return { canSubmit: true, errorMessage: undefined };
-  };
+    // 报价加载中
+    if (isLoadingQuote || isFetchingQuote) {
+      return { canSubmit: false, errorMessage: undefined }
+    }
 
-  const { canSubmit, errorMessage } = getButtonState();
+    // 报价错误
+    if (quoteError) {
+      return { canSubmit: false, errorMessage: quoteError.message }
+    }
 
-  // Rate text
+    // 没有报价结果
+    if (!toAmount || toAmount === "0") {
+      return { canSubmit: false, errorMessage: "No quote available" }
+    }
+
+    return { canSubmit: true, errorMessage: undefined }
+  }
+
+  const { canSubmit, errorMessage } = getButtonState()
+
+  // Rate text - 基于实际报价计算
   const getRateText = () => {
     if (!fromToken || !toToken || !fromAmount || !toAmount) {
-      return undefined;
+      return undefined
     }
 
-    const rate = MOCK_RATES[fromToken.symbol]?.[toToken.symbol];
-    if (!rate) return undefined;
+    const fromAmountNum = Number(fromAmount)
+    const toAmountNum = Number(toAmount)
 
-    return `1 ${fromToken.symbol} ≈ ${rate.toLocaleString(undefined, { 
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 6 
-    })} ${toToken.symbol}`;
-  };
+    if (fromAmountNum > 0 && toAmountNum > 0) {
+      const rate = toAmountNum / fromAmountNum
+      return `1 ${fromToken.symbol} ≈ ${rate.toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 6,
+      })} ${toToken.symbol}`
+    }
+
+    return undefined
+  }
 
   return (
     <>
@@ -253,13 +277,15 @@ export function SwapCard({
             toToken={toToken}
             rateText={getRateText()}
             slippageBps={settings.slippageBps}
+            isLoadingQuote={isFetchingQuote}
+            quoteError={quoteError?.message}
           />
 
           <SwapActionButton
             isConnected={isConnected}
             canSubmit={canSubmit}
             errorMessage={errorMessage}
-            onConnect={handleConnect}
+            onConnect={() => {}} // 使用 wagmi 的连接状态，这里不需要手动处理
             onReview={handleReview}
           />
         </div>
@@ -283,4 +309,3 @@ export function SwapCard({
     </>
   )
 }
-
