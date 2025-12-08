@@ -1,12 +1,7 @@
-export type Side = "from" | "to"
+import type { Address } from "viem"
+import type { TokenConfig } from "@/config/tokens"
 
-export interface Token {
-  address: string
-  symbol: string
-  name: string
-  decimals: number
-  logoURI?: string
-}
+export type Side = "from" | "to"
 
 export interface SwapSettings {
   slippageBps: number
@@ -15,9 +10,18 @@ export interface SwapSettings {
 }
 
 export interface SwapReviewParams {
-  fromToken: Token
-  toToken: Token
-  fromAmount: string
-  toAmount: string
-  settings: SwapSettings
+  chainId: number
+  fromToken: TokenConfig
+  toToken: TokenConfig
+  path: Address[]
+  amountIn: bigint
+  amountOutMin: bigint
+  deadline: number
+  humanAmountIn: string
+  humanAmountOut: string
+  slippageBps: number
+  recipient: Address
 }
+
+// UI 侧使用 TokenConfig 作为 Token 类型，避免重复定义
+export type Token = TokenConfig

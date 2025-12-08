@@ -1,8 +1,7 @@
 "use client"
 
 import { useState, useEffect, useMemo, useCallback } from "react"
-import { useChainId, useConnections, useConnection } from "wagmi"
-import { parseUnits } from "viem"
+import { useChainId } from "wagmi"
 import { AppPanel } from "@/components/app/app-panel"
 import { SwapHeader } from "./SwapHeader"
 import { SwapTokenRow } from "./SwapTokenRow"
@@ -11,16 +10,16 @@ import { SwapFooter } from "./SwapFooter"
 import { SwapActionButton } from "./SwapActionButton"
 import { TokenSelectDialog } from "./TokenSelectDialog"
 import { SwapSettingsDialog } from "./SwapSettingsDialog"
-import { useSwapQuote } from "@/lib/hooks/useSwapQuote"
+import { useSwapForm } from "./useSwapForm"
 import { useTokenBalances } from "@/lib/hooks/useTokenBalances"
 import { useTokenAllowance } from "@/lib/hooks/useTokenAllowance"
 import { useTokenApproval } from "@/lib/hooks/useTokenApproval"
 import { useSwap } from "@/lib/hooks/useSwap"
-import { getTokensByChainId, tokenConfigToToken } from "@/config/tokens"
+import { getTokensByChainId } from "@/config/tokens"
 import { getUniswapV2RouterAddress } from "@/config/contracts"
 import { getExplorerTxUrl } from "@/lib/utils"
 import { formatUnits } from "viem"
-import type { Token, Side, SwapSettings, SwapReviewParams } from "./types"
+import type { Token, Side, SwapReviewParams } from "./types"
 import type { TokenConfig } from "@/config/tokens"
 
 export interface SwapCardProps {
@@ -36,27 +35,15 @@ export function SwapCard({
   defaultToSymbol = "USDC",
   onReview,
 }: SwapCardProps) {
-  // Wagmi hooks
-  const chainId = useChainId()
-  const connections = useConnections()
-  const isConnected = connections.length > 0
-  const { address } = useConnection()
+  const chainIdFromWagmi = useChainId()
 
-  // 获取当前链的 token 配置
-  const tokenConfigs = useMemo(() => getTokensByChainId(chainId), [chainId])
+  const tokenConfigs = useMemo(() => getTokensByChainId(chainIdFromWagmi), [chainIdFromWagmi])
+  const tokens = useMemo(() => propTokens || tokenConfigs, [propTokens, tokenConfigs])
 
-  // 转换为组件使用的 Token 类型
-  const tokens = useMemo(
-    () => propTokens || tokenConfigs.map(tokenConfigToToken),
-    [propTokens, tokenConfigs]
-  )
-
-  // 获取真实余额
   const { data: balances, isLoading: balancesLoading } = useTokenBalances({
-    tokens: tokenConfigs,
+    tokens,
   })
 
-  // 计算默认 token
   const defaultFromToken = useMemo(() => {
     return tokens.find((t) => t.symbol === defaultFromSymbol) || tokens[0] || null
   }, [tokens, defaultFromSymbol])
@@ -66,80 +53,61 @@ export function SwapCard({
     return to && to.address !== defaultFromToken?.address ? to : null
   }, [tokens, defaultToSymbol, defaultFromToken])
 
-  // State - 使用函数初始化，只在首次渲染时设置
-  const [fromToken, setFromToken] = useState<Token | null>(() => defaultFromToken)
-  const [toToken, setToToken] = useState<Token | null>(() => defaultToToken)
-  const [fromAmount, setFromAmount] = useState("")
-  const [toAmount, setToAmount] = useState("")
-  const [settings, setSettings] = useState<SwapSettings>({
-    slippageBps: 30,
-    deadlineMinutes: 30,
-    oneClickEnabled: false,
-  })
   const [tokenDialogOpen, setTokenDialogOpen] = useState(false)
   const [tokenDialogSide, setTokenDialogSide] = useState<Side | null>(null)
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false)
 
-  // 当 tokens 或 chainId 变化时，如果当前 token 不在新列表中，重置为默认值
-  useEffect(() => {
-    if (tokens.length > 0) {
-      const fromTokenExists = fromToken && tokens.some((t) => t.address === fromToken.address)
-      const toTokenExists = toToken && tokens.some((t) => t.address === toToken.address)
-
-      if (!fromTokenExists) {
-        setFromToken(defaultFromToken)
-      }
-      if (!toTokenExists) {
-        setToToken(defaultToToken)
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chainId, tokens.length]) // 只在 chainId 或 token 数量变化时更新
-
-  // 链上报价
   const {
-    amountOutFormatted,
-    rawAmountOut,
-    isLoading: isLoadingQuote,
-    isFetching: isFetchingQuote,
-    error: quoteError,
-  } = useSwapQuote({
     fromToken,
     toToken,
-    amountIn: fromAmount,
+    fromAmount,
+    toAmount,
+    slippageBps,
+    deadlineMinutes,
     chainId,
-    enabled: isConnected, // 只有在连接钱包后才启用报价
+    address,
+    reviewParams,
+    setFromToken,
+    setToToken,
+    setFromAmount,
+    setToAmount,
+    switchTokens,
+    setSlippageBps,
+    setDeadlineMinutes,
+    isValid,
+    validationError,
+    isConnected,
+    isLoadingQuote,
+    isFetchingQuote,
+    quoteError,
+    settings,
+    setSettings,
+  } = useSwapForm({
+    defaultFromToken,
+    defaultToToken,
   })
 
-  // 派生 toAmount - 优先使用链上报价
-  const displayToAmount = useMemo(() => {
-    if (amountOutFormatted) {
-      return amountOutFormatted
-    }
-    if (!fromAmount || !fromToken || !toToken) {
-      return ""
-    }
-    return toAmount
-  }, [amountOutFormatted, fromAmount, fromToken, toToken, toAmount])
+  useEffect(() => {
+    if (!tokens.length) return
 
-  // 获取 Router 地址
+    const fromTokenExists = fromToken && tokens.some((t) => t.address === fromToken.address)
+    const toTokenExists = toToken && tokens.some((t) => t.address === toToken.address)
+
+    if (!fromTokenExists) {
+      setFromToken(defaultFromToken)
+    }
+    if (!toTokenExists) {
+      setToToken(defaultToToken)
+    }
+  }, [tokens, fromToken, toToken, defaultFromToken, defaultToToken, setFromToken, setToToken])
+
   const routerAddress = useMemo(() => {
-    return getUniswapV2RouterAddress(chainId)
+    return chainId ? getUniswapV2RouterAddress(chainId) : undefined
   }, [chainId])
 
-  // 获取 fromToken 对应的 TokenConfig
-  const fromTokenConfig = useMemo<TokenConfig | null>(() => {
-    if (!fromToken) return null
-    return tokenConfigs.find((config) => config.address === fromToken.address) || null
-  }, [fromToken, tokenConfigs])
+  const fromTokenConfig = fromToken || null
+  const toTokenConfig = toToken || null
 
-  // 获取 toToken 对应的 TokenConfig
-  const toTokenConfig = useMemo<TokenConfig | null>(() => {
-    if (!toToken) return null
-    return tokenConfigs.find((config) => config.address === toToken.address) || null
-  }, [toToken, tokenConfigs])
-
-  // 获取 Token Allowance
   const {
     allowance,
     isLoading: allowanceLoading,
@@ -152,7 +120,6 @@ export function SwapCard({
     enabled: Boolean(fromTokenConfig && address && routerAddress && isConnected),
   })
 
-  // Token Approval Hook
   const {
     approveMax,
     isPending: approvePending,
@@ -166,42 +133,19 @@ export function SwapCard({
     chainId,
   })
 
-  // 在 Approve 成功后刷新 allowance
   useEffect(() => {
     if (approveSuccess) {
       refetchAllowance()
     }
   }, [approveSuccess, refetchAllowance])
 
-  // 计算 fromAmount 的 bigint 值（用于比较 allowance）
-  const fromAmountInWei = useMemo(() => {
-    if (!fromToken || !fromAmount || fromAmount === "0") {
-      return BigInt(0)
-    }
-    try {
-      const amountNum = Number(fromAmount)
-      if (isNaN(amountNum) || amountNum <= 0) {
-        return BigInt(0)
-      }
-      return parseUnits(fromAmount, fromToken.decimals)
-    } catch {
-      return BigInt(0)
-    }
-  }, [fromToken, fromAmount])
+  const fromAmountInWei = reviewParams?.amountIn ?? 0n
 
-  // 计算 amountOutMin（考虑 slippage）
   const amountOutMin = useMemo(() => {
-    if (!rawAmountOut || !toToken || !settings.slippageBps) {
-      return "0"
-    }
-    // slippageBps 是基点（basis points），例如 30 表示 0.3%
-    // amountOutMin = rawAmountOut * (10000 - slippageBps) / 10000
-    const slippageMultiplier = BigInt(10000 - settings.slippageBps)
-    const amountOutMinWei = (rawAmountOut * slippageMultiplier) / BigInt(10000)
-    return formatUnits(amountOutMinWei, toToken.decimals)
-  }, [rawAmountOut, toToken, settings.slippageBps])
+    if (!reviewParams) return "0"
+    return formatUnits(reviewParams.amountOutMin, reviewParams.toToken.decimals)
+  }, [reviewParams])
 
-  // Swap Hook
   const {
     swap,
     isPending: swapPending,
@@ -212,24 +156,19 @@ export function SwapCard({
   } = useSwap({
     fromToken: fromTokenConfig,
     toToken: toTokenConfig,
-    amountIn: fromAmount,
+    amountIn: reviewParams?.humanAmountIn ?? "",
     amountOutMin,
-    recipient: address,
-    deadlineMinutes: settings.deadlineMinutes,
+    recipient: reviewParams?.recipient,
+    deadlineMinutes,
     chainId,
   })
 
-  // Swap 成功后的后置处理
   useEffect(() => {
     if (swapSuccess) {
-      // 可以在这里触发余额刷新（如果有 refetch 方法）
-      // 暂时不清空输入，让用户看到结果
-      // 如果需要清空，可以取消下面的注释
-      // setFromAmount('')
+      // 保持输入值，让用户看到结果
     }
   }, [swapSuccess])
 
-  // 获取区块浏览器链接
   const explorerUrl = useMemo(() => {
     if (swapSuccess && swapTxHash && chainId) {
       return getExplorerTxUrl(chainId, swapTxHash)
@@ -237,7 +176,6 @@ export function SwapCard({
     return undefined
   }, [swapSuccess, swapTxHash, chainId])
 
-  // Handlers
   const handleFromAmountChange = (value: string) => {
     setFromAmount(value)
   }
@@ -247,16 +185,14 @@ export function SwapCard({
     setTokenDialogOpen(true)
   }
 
-  const handleSelectToken = (side: Side, token: Token) => {
+  const handleSelectToken = (side: Side, token: TokenConfig) => {
     if (side === "from") {
       setFromToken(token)
-      // If same as toToken, clear toToken
       if (toToken?.address === token.address) {
         setToToken(null)
       }
     } else {
       setToToken(token)
-      // If same as fromToken, clear fromToken
       if (fromToken?.address === token.address) {
         setFromToken(null)
       }
@@ -264,73 +200,38 @@ export function SwapCard({
   }
 
   const handleSwitch = () => {
-    setFromToken(toToken)
-    setToToken(fromToken)
-    // 切换方向时清空金额，让用户重新输入
-    setFromAmount("")
-    setToAmount("")
+    switchTokens()
   }
 
   const handleReview = useCallback(() => {
-    if (!fromToken || !toToken || !fromAmount) return
+    if (!reviewParams) return
 
-    const params: SwapReviewParams = {
-      fromToken,
-      toToken,
-      fromAmount,
-      toAmount: displayToAmount,
-      settings,
-    }
+    console.log("Swap Review Params:", reviewParams)
+    onReview?.(reviewParams)
+  }, [onReview, reviewParams])
 
-    console.log("Swap Review Params:", params)
-    onReview?.(params)
-  }, [fromToken, toToken, fromAmount, displayToAmount, settings, onReview])
-
-  // 决定当前按钮的主要操作
   const primaryAction = useMemo(() => {
-    // Case 1: 钱包未连接
     if (!isConnected) {
       return {
         label: "Connect Wallet",
         disabled: false,
-        onClick: () => {}, // 使用 wagmi 的连接状态，这里不需要手动处理
+        onClick: () => {},
         type: "connect" as const,
       }
     }
 
-    // Case 2: 基础校验
-    if (!fromToken || !toToken) {
+    if (!isValid) {
       return {
-        label: "Select tokens",
+        label: validationError || "Enter an amount",
         disabled: true,
         onClick: () => {},
         type: "error" as const,
       }
     }
 
-    if (!fromAmount || fromAmount === "0") {
-      return {
-        label: "Enter an amount",
-        disabled: true,
-        onClick: () => {},
-        type: "error" as const,
-      }
-    }
-
-    const fromAmountNum = Number(fromAmount)
-    if (isNaN(fromAmountNum)) {
-      return {
-        label: "Invalid amount",
-        disabled: true,
-        onClick: () => {},
-        type: "error" as const,
-      }
-    }
-
-    // 使用真实余额检查
-    const balanceStr = balances[fromToken.address] || "0"
-    const balance = Number(balanceStr)
-    if (isNaN(balance) || fromAmountNum > balance) {
+    const balanceStr = fromToken ? balances[fromToken.address] : undefined
+    const balance = Number(balanceStr || "0")
+    if (fromToken && fromAmount && (isNaN(balance) || Number(fromAmount) > balance)) {
       return {
         label: "Insufficient balance",
         disabled: true,
@@ -339,106 +240,6 @@ export function SwapCard({
       }
     }
 
-    // Case 3: 原生币不需要 approve，直接走 Swap
-    if (fromTokenConfig?.isNative) {
-      // 报价加载中
-      if (isLoadingQuote || isFetchingQuote) {
-        return {
-          label: "Loading...",
-          disabled: true,
-          onClick: () => {},
-          type: "loading" as const,
-        }
-      }
-
-      // 报价错误
-      if (quoteError) {
-        return {
-          label: quoteError.message,
-          disabled: true,
-          onClick: () => {},
-          type: "error" as const,
-        }
-      }
-
-      // 没有报价结果
-      if (!displayToAmount || displayToAmount === "0") {
-        return {
-          label: "No quote available",
-          disabled: true,
-          onClick: () => {},
-          type: "error" as const,
-        }
-      }
-
-      return {
-        label: "Swap",
-        disabled: false,
-        onClick: handleReview,
-        type: "swap" as const,
-      }
-    }
-
-    // Case 4: ERC20 Token，需要检查 allowance
-    // 检查 allowance 加载中
-    if (allowanceLoading) {
-      return {
-        label: "Checking allowance...",
-        disabled: true,
-        onClick: () => {},
-        type: "loading" as const,
-      }
-    }
-
-    // Approve 进行中
-    if (approvePending) {
-      return {
-        label: "Approving...",
-        disabled: true,
-        onClick: () => {},
-        type: "approving" as const,
-      }
-    }
-
-    // 如果 allowance 不足，显示 Approve 按钮
-    if (allowance < fromAmountInWei) {
-      return {
-        label: `Approve ${fromToken.symbol}`,
-        disabled: false,
-        onClick: async () => {
-          try {
-            await approveMax()
-          } catch (err) {
-            // 错误已经在 hook 中处理
-            console.error("Approve failed:", err)
-          }
-        },
-        type: "approve" as const,
-      }
-    }
-
-    // Allowance 充足，可以 Swap
-    // Swap 进行中
-    if (swapPending) {
-      return {
-        label: "Swapping...",
-        disabled: true,
-        onClick: () => {},
-        type: "swapping" as const,
-      }
-    }
-
-    // Swap 成功（短暂显示，然后恢复为 Swap）
-    if (swapSuccess) {
-      return {
-        label: "Swap",
-        disabled: false,
-        onClick: handleReview,
-        type: "swap" as const,
-      }
-    }
-
-    // 报价加载中
     if (isLoadingQuote || isFetchingQuote) {
       return {
         label: "Loading...",
@@ -448,7 +249,6 @@ export function SwapCard({
       }
     }
 
-    // 报价错误
     if (quoteError) {
       return {
         label: quoteError.message,
@@ -458,8 +258,7 @@ export function SwapCard({
       }
     }
 
-    // 没有报价结果
-    if (!displayToAmount || displayToAmount === "0") {
+    if (!reviewParams || !reviewParams.humanAmountOut || reviewParams.humanAmountOut === "0") {
       return {
         label: "No quote available",
         disabled: true,
@@ -468,13 +267,63 @@ export function SwapCard({
       }
     }
 
-    // 检查是否支持 Swap（只支持 ERC20 → ERC20）
-    if (fromTokenConfig?.isNative || toTokenConfig?.isNative) {
+    if (fromTokenConfig?.isNative) {
       return {
-        label: "Swap (ERC20 only)",
+        label: "Swap",
+        disabled: false,
+        onClick: handleReview,
+        type: "swap" as const,
+      }
+    }
+
+    if (allowanceLoading) {
+      return {
+        label: "Checking allowance...",
         disabled: true,
         onClick: () => {},
-        type: "error" as const,
+        type: "loading" as const,
+      }
+    }
+
+    if (approvePending) {
+      return {
+        label: "Approving...",
+        disabled: true,
+        onClick: () => {},
+        type: "approving" as const,
+      }
+    }
+
+    if (allowance < fromAmountInWei) {
+      return {
+        label: fromToken ? `Approve ${fromToken.symbol}` : "Approve",
+        disabled: false,
+        onClick: async () => {
+          try {
+            await approveMax()
+          } catch (err) {
+            console.error("Approve failed:", err)
+          }
+        },
+        type: "approve" as const,
+      }
+    }
+
+    if (swapPending) {
+      return {
+        label: "Swapping...",
+        disabled: true,
+        onClick: () => {},
+        type: "swapping" as const,
+      }
+    }
+
+    if (swapSuccess) {
+      return {
+        label: "Swap",
+        disabled: false,
+        onClick: handleReview,
+        type: "swap" as const,
       }
     }
 
@@ -485,7 +334,6 @@ export function SwapCard({
         try {
           await swap()
         } catch (err) {
-          // 错误已经在 hook 中处理
           console.error("Swap failed:", err)
         }
       },
@@ -493,28 +341,27 @@ export function SwapCard({
     }
   }, [
     isConnected,
+    isValid,
+    validationError,
     fromToken,
-    toToken,
-    fromAmount,
     balances,
-    fromTokenConfig,
-    toTokenConfig,
-    allowanceLoading,
-    allowance,
-    fromAmountInWei,
-    approvePending,
-    swapPending,
-    swapSuccess,
+    fromAmount,
     isLoadingQuote,
     isFetchingQuote,
     quoteError,
-    displayToAmount,
+    reviewParams,
+    fromTokenConfig,
+    allowanceLoading,
+    approvePending,
+    allowance,
+    fromAmountInWei,
+    swapPending,
+    swapSuccess,
+    handleReview,
     approveMax,
     swap,
-    handleReview,
   ])
 
-  // 兼容旧的按钮状态逻辑（用于错误显示）
   const errorMessage = useMemo(() => {
     if (primaryAction.type === "error") {
       return primaryAction.label
@@ -528,14 +375,13 @@ export function SwapCard({
     return undefined
   }, [primaryAction, approveError, approveErrorObj, swapError, swapErrorObj])
 
-  // Rate text - 基于实际报价计算
   const getRateText = () => {
-    if (!fromToken || !toToken || !fromAmount || !displayToAmount) {
+    if (!fromToken || !toToken || !fromAmount || !toAmount) {
       return undefined
     }
 
     const fromAmountNum = Number(fromAmount)
-    const toAmountNum = Number(displayToAmount)
+    const toAmountNum = Number(toAmount)
 
     if (fromAmountNum > 0 && toAmountNum > 0) {
       const rate = toAmountNum / fromAmountNum
@@ -576,7 +422,7 @@ export function SwapCard({
             side="to"
             label="To"
             token={toToken}
-            amount={displayToAmount}
+            amount={toAmount}
             balance={
               toToken && balances[toToken.address]
                 ? Number(balances[toToken.address])
@@ -592,7 +438,7 @@ export function SwapCard({
             fromToken={fromToken}
             toToken={toToken}
             rateText={getRateText()}
-            slippageBps={settings.slippageBps}
+            slippageBps={slippageBps}
             isLoadingQuote={isFetchingQuote}
             quoteError={quoteError?.message}
           />
@@ -607,25 +453,22 @@ export function SwapCard({
               primaryAction.type === "swapping"
             }
             buttonLabel={primaryAction.label}
-            onConnect={() => {}} // 使用 wagmi 的连接状态，这里不需要手动处理
+            onConnect={() => {}}
             onReview={primaryAction.onClick}
           />
 
-          {/* Approve 错误提示 */}
           {approveError && approveErrorObj && (
             <div className="text-sm text-error-foreground text-center mt-2">
               Approve failed: {approveErrorObj.message}
             </div>
           )}
 
-          {/* Swap 错误提示 */}
           {swapError && swapErrorObj && (
             <div className="text-sm text-error-foreground text-center mt-2">
               Swap failed: {swapErrorObj.message}
             </div>
           )}
 
-          {/* Swap 成功 - 区块浏览器链接 */}
           {swapSuccess && explorerUrl && (
             <div className="text-xs text-center mt-2">
               <a

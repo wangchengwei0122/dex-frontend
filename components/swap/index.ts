@@ -6,6 +6,6 @@ export { SwapFooter } from './SwapFooter';
 export { SwapActionButton } from './SwapActionButton';
 export { TokenSelectDialog } from './TokenSelectDialog';
 export { SwapSettingsDialog } from './SwapSettingsDialog';
+export { useSwapForm } from './useSwapForm';
 
 export type * from './types';
-

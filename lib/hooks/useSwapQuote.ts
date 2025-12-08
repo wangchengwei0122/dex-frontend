@@ -4,13 +4,13 @@ import { formatUnits, parseUnits, type Address } from 'viem'
 import { useDebouncedValue } from './useDebouncedValue'
 import { getUniswapV2RouterAddress, getWETHAddress } from '@/config/contracts'
 import { uniswapV2RouterAbi } from '@/lib/abi/uniswapV2Router'
-import type { Token } from '@/components/swap/types'
+import type { TokenConfig } from '@/config/tokens'
 
 export interface UseSwapQuoteParams {
   /** 输入 Token */
-  fromToken?: Token | null
+  fromToken?: TokenConfig | null
   /** 输出 Token */
-  toToken?: Token | null
+  toToken?: TokenConfig | null
   /** 输入金额（人类可读格式） */
   amountIn: string
   /** 当前链 ID */
@@ -178,4 +178,3 @@ export function useSwapQuote({
     error: query.error as Error | null,
   }
 }
-
