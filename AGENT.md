@@ -19,11 +19,11 @@
 
 ## Swap Domain Notes
 - Token/contract config: `config/tokens.ts` (+ `config/tokens/mainnet.ts`, `config/tokens/sepolia.ts`); Uniswap V2 addresses in `config/contracts.ts` (`getUniswapV2RouterAddress`, `getWETHAddress`).
-- Core hooks (`lib/hooks`):
-  - `useSwapQuote`: debounced (400ms) `getAmountsOut` via public client; enabled only when wallet connected and inputs valid; errors mapped to user-friendly strings.
-  - `useSwap`: ERC20→ERC20 `swapExactTokensForTokens` with simulate/write/wait; builds direct path only (no WETH hop/native support); exposes status/error/txHash.
-  - `useTokenBalances`, `useTokenAllowance`, `useTokenApproval` wrap balance/allowance/approve flows.
-- `components/swap/SwapCard` orchestrates selection, balances, allowance/approve, quote, swap, settings (slippage/deadline) and passes state to subcomponents (`SwapTokenRow`, `SwapFooter`, dialogs, etc.). Primary action auto-switches between connect/select/approve/swap states and shows errors.
+- Swap engine lives under `features/swap/engine` (types/errors + hooks: `useSwapForm`, `useSwapQuote`, `useSwap`, `useTokenAllowance`, `useTokenApproval`; barrel `index.ts`).
+- `useSwapQuote`: debounced (400ms) `getAmountsOut` via public client; enabled only when wallet connected and inputs valid; errors mapped to user-friendly strings.
+- `useSwap`: ERC20→ERC20 `swapExactTokensForTokens` with simulate/write/wait; builds direct path only (no WETH hop/native support); exposes status/error/txHash.
+- `useTokenBalances` remains in `lib/hooks` for balance fetch; allowance/approval hooks are in the engine.
+- `components/swap/SwapCard` orchestrates selection, balances, allowance/approve, quote, swap, settings (slippage/deadline) and passes state to subcomponents (`TokenAmountInput`, `SwapFooter`, dialogs, etc.). Primary action auto-switches between connect/select/approve/swap states and shows errors.
 
 ## UI Implementation Notes
 - AppPanel/AppButton already set gold glow/borders via inline styles and `config/theme.ts`; match their conventions instead of new CSS.
