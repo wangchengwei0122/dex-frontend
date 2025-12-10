@@ -18,9 +18,12 @@ import { useSwap } from "@/lib/hooks/useSwap"
 import { getTokensByChainId } from "@/config/tokens"
 import { getUniswapV2RouterAddress } from "@/config/contracts"
 import { getExplorerTxUrl } from "@/lib/utils"
-import { formatUnits } from "viem"
+import { formatUnits, parseUnits } from "viem"
 import type { Token, Side, SwapReviewParams } from "./types"
 import type { TokenConfig } from "@/config/tokens"
+import { deriveSwapError } from "./errors"
+import type { SwapError } from "./errors"
+import type { SupportedChainId } from "@/config/contracts"
 
 export interface SwapCardProps {
   tokens?: Token[]
@@ -28,6 +31,8 @@ export interface SwapCardProps {
   defaultToSymbol?: string
   onReview?: (params: SwapReviewParams) => void
 }
+
+const SUPPORTED_CHAIN_IDS: SupportedChainId[] = [1, 11155111]
 
 export function SwapCard({
   tokens: propTokens,
@@ -74,8 +79,6 @@ export function SwapCard({
     switchTokens,
     setSlippageBps,
     setDeadlineMinutes,
-    isValid,
-    validationError,
     isConnected,
     isLoadingQuote,
     isFetchingQuote,
@@ -124,8 +127,6 @@ export function SwapCard({
     approveMax,
     isPending: approvePending,
     isSuccess: approveSuccess,
-    isError: approveError,
-    error: approveErrorObj,
   } = useTokenApproval({
     token: fromTokenConfig,
     owner: address,
@@ -139,7 +140,17 @@ export function SwapCard({
     }
   }, [approveSuccess, refetchAllowance])
 
-  const fromAmountInWei = reviewParams?.amountIn ?? 0n
+  const amountInWei = useMemo(() => {
+    if (reviewParams?.amountIn) return reviewParams.amountIn
+    if (!fromToken || !fromAmount) return undefined
+    try {
+      const amountNum = Number(fromAmount)
+      if (Number.isNaN(amountNum) || amountNum <= 0) return undefined
+      return parseUnits(fromAmount, fromToken.decimals)
+    } catch {
+      return undefined
+    }
+  }, [fromAmount, fromToken, reviewParams?.amountIn])
 
   const amountOutMin = useMemo(() => {
     if (!reviewParams) return "0"
@@ -148,9 +159,8 @@ export function SwapCard({
 
   const {
     swap,
-    isPending: swapPending,
+    status: swapStatus,
     isSuccess: swapSuccess,
-    isError: swapError,
     txHash: swapTxHash,
     error: swapErrorObj,
   } = useSwap({
@@ -162,6 +172,17 @@ export function SwapCard({
     deadlineMinutes,
     chainId,
   })
+
+  const fromBalanceWei = useMemo(() => {
+    if (!fromToken) return undefined
+    const balanceStr = balances[fromToken.address]
+    if (balanceStr === undefined) return undefined
+    try {
+      return parseUnits(balanceStr, fromToken.decimals)
+    } catch {
+      return undefined
+    }
+  }, [balances, fromToken])
 
   useEffect(() => {
     if (swapSuccess) {
@@ -175,6 +196,44 @@ export function SwapCard({
     }
     return undefined
   }, [swapSuccess, swapTxHash, chainId])
+
+  const currentError: SwapError = useMemo(() => {
+    const isNativeFromToken = Boolean(fromTokenConfig?.isNative)
+    return deriveSwapError({
+      isConnected,
+      chainId,
+      supportedChainIds: SUPPORTED_CHAIN_IDS,
+      fromToken: fromTokenConfig,
+      toToken: toTokenConfig,
+      fromAmount,
+      toAmount,
+      fromBalance: fromBalanceWei,
+      quoteLoading: isLoadingQuote || isFetchingQuote,
+      quoteError,
+      isNativeFromToken,
+      allowance,
+      amountInWei,
+      allowanceLoading,
+      swapStatus: swapStatus || "idle",
+      swapError: swapErrorObj,
+    })
+  }, [
+    allowance,
+    allowanceLoading,
+    chainId,
+    fromAmount,
+    fromBalanceWei,
+    fromTokenConfig,
+    isConnected,
+    isFetchingQuote,
+    isLoadingQuote,
+    amountInWei,
+    quoteError,
+    swapErrorObj,
+    swapStatus,
+    toAmount,
+    toTokenConfig,
+  ])
 
   const handleFromAmountChange = (value: string) => {
     setFromAmount(value)
@@ -215,73 +274,9 @@ export function SwapCard({
       return {
         label: "Connect Wallet",
         disabled: false,
+        loading: false,
         onClick: () => {},
         type: "connect" as const,
-      }
-    }
-
-    if (!isValid) {
-      return {
-        label: validationError || "Enter an amount",
-        disabled: true,
-        onClick: () => {},
-        type: "error" as const,
-      }
-    }
-
-    const balanceStr = fromToken ? balances[fromToken.address] : undefined
-    const balance = Number(balanceStr || "0")
-    if (fromToken && fromAmount && (isNaN(balance) || Number(fromAmount) > balance)) {
-      return {
-        label: "Insufficient balance",
-        disabled: true,
-        onClick: () => {},
-        type: "error" as const,
-      }
-    }
-
-    if (isLoadingQuote || isFetchingQuote) {
-      return {
-        label: "Loading...",
-        disabled: true,
-        onClick: () => {},
-        type: "loading" as const,
-      }
-    }
-
-    if (quoteError) {
-      return {
-        label: quoteError.message,
-        disabled: true,
-        onClick: () => {},
-        type: "error" as const,
-      }
-    }
-
-    if (!reviewParams || !reviewParams.humanAmountOut || reviewParams.humanAmountOut === "0") {
-      return {
-        label: "No quote available",
-        disabled: true,
-        onClick: () => {},
-        type: "error" as const,
-      }
-    }
-
-    if (fromTokenConfig?.isNative) {
-      return {
-        label: "Swap",
-        disabled: false,
-        onClick: handleReview,
-        type: "swap" as const,
-      }
-    }
-
-    if (allowanceLoading) {
-      return {
-        label: "Checking allowance...",
-        disabled: true,
-        onClick: () => {},
-        type: "loading" as const,
       }
     }
 
@@ -289,15 +284,47 @@ export function SwapCard({
       return {
         label: "Approving...",
         disabled: true,
+        loading: true,
         onClick: () => {},
         type: "approving" as const,
       }
     }
 
-    if (allowance < fromAmountInWei) {
+    if (currentError.code === "QUOTE_LOADING") {
+      return {
+        label: "Fetching quote…",
+        disabled: true,
+        loading: true,
+        onClick: () => {},
+        type: "loading" as const,
+      }
+    }
+
+    if (currentError.code === "SWAP_PREPARING" || currentError.code === "SWAP_PENDING") {
+      return {
+        label: "Swapping...",
+        disabled: true,
+        loading: true,
+        onClick: () => {},
+        type: "swapping" as const,
+      }
+    }
+
+    if (allowanceLoading && !fromTokenConfig?.isNative) {
+      return {
+        label: "Checking allowance...",
+        disabled: true,
+        loading: true,
+        onClick: () => {},
+        type: "loading" as const,
+      }
+    }
+
+    if (currentError.code === "INSUFFICIENT_ALLOWANCE") {
       return {
         label: fromToken ? `Approve ${fromToken.symbol}` : "Approve",
         disabled: false,
+        loading: false,
         onClick: async () => {
           try {
             await approveMax()
@@ -309,71 +336,43 @@ export function SwapCard({
       }
     }
 
-    if (swapPending) {
+    if (currentError.code !== "NONE") {
       return {
-        label: "Swapping...",
+        label: currentError.shortMessage || "Unavailable",
         disabled: true,
+        loading: false,
         onClick: () => {},
-        type: "swapping" as const,
-      }
-    }
-
-    if (swapSuccess) {
-      return {
-        label: "Swap",
-        disabled: false,
-        onClick: handleReview,
-        type: "swap" as const,
+        type: "error" as const,
       }
     }
 
     return {
       label: "Swap",
       disabled: false,
-      onClick: async () => {
-        try {
-          await swap()
-        } catch (err) {
-          console.error("Swap failed:", err)
-        }
-      },
+      loading: false,
+      onClick: fromTokenConfig?.isNative
+        ? handleReview
+        : async () => {
+          try {
+            await swap()
+          } catch (err) {
+            console.error("Swap failed:", err)
+          }
+        },
       type: "swap" as const,
     }
   }, [
-    isConnected,
-    isValid,
-    validationError,
-    fromToken,
-    balances,
-    fromAmount,
-    isLoadingQuote,
-    isFetchingQuote,
-    quoteError,
-    reviewParams,
-    fromTokenConfig,
-    allowanceLoading,
-    approvePending,
-    allowance,
-    fromAmountInWei,
-    swapPending,
-    swapSuccess,
-    handleReview,
     approveMax,
+    approvePending,
+    currentError.code,
+    currentError.shortMessage,
+    fromToken,
+    fromTokenConfig?.isNative,
+    handleReview,
+    isConnected,
     swap,
+    allowanceLoading,
   ])
-
-  const errorMessage = useMemo(() => {
-    if (primaryAction.type === "error") {
-      return primaryAction.label
-    }
-    if (approveError && approveErrorObj) {
-      return `Approve failed: ${approveErrorObj.message}`
-    }
-    if (swapError && swapErrorObj) {
-      return `Swap failed: ${swapErrorObj.message}`
-    }
-    return undefined
-  }, [primaryAction, approveError, approveErrorObj, swapError, swapErrorObj])
 
   const getRateText = () => {
     if (!fromToken || !toToken || !fromAmount || !toAmount) {
@@ -393,6 +392,12 @@ export function SwapCard({
 
     return undefined
   }
+
+  const bottomErrorMessage =
+    currentError.code !== "NONE" &&
+    !["SWAP_PREPARING", "SWAP_PENDING"].includes(currentError.code)
+      ? currentError.longMessage
+      : undefined
 
   return (
     <>
@@ -439,34 +444,21 @@ export function SwapCard({
             toToken={toToken}
             rateText={getRateText()}
             slippageBps={slippageBps}
-            isLoadingQuote={isFetchingQuote}
-            quoteError={quoteError?.message}
+            isLoadingQuote={currentError.code === "QUOTE_LOADING"}
+            quoteError={currentError.code === "QUOTE_FAILED" ? currentError.shortMessage : undefined}
           />
 
           <SwapActionButton
             isConnected={isConnected}
-            canSubmit={primaryAction.type === "swap" || primaryAction.type === "approve"}
-            errorMessage={errorMessage}
-            loading={
-              primaryAction.type === "loading" ||
-              primaryAction.type === "approving" ||
-              primaryAction.type === "swapping"
-            }
+            canSubmit={!primaryAction.disabled}
+            loading={primaryAction.loading}
             buttonLabel={primaryAction.label}
             onConnect={() => {}}
             onReview={primaryAction.onClick}
           />
 
-          {approveError && approveErrorObj && (
-            <div className="text-sm text-error-foreground text-center mt-2">
-              Approve failed: {approveErrorObj.message}
-            </div>
-          )}
-
-          {swapError && swapErrorObj && (
-            <div className="text-sm text-error-foreground text-center mt-2">
-              Swap failed: {swapErrorObj.message}
-            </div>
+          {bottomErrorMessage && (
+            <div className="text-xs text-red-500 text-center mt-2">{bottomErrorMessage}</div>
           )}
 
           {swapSuccess && explorerUrl && (

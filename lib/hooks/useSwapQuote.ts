@@ -1,10 +1,10 @@
-import { useQuery } from '@tanstack/react-query'
-import { usePublicClient } from 'wagmi'
-import { formatUnits, parseUnits, type Address } from 'viem'
-import { useDebouncedValue } from './useDebouncedValue'
-import { getUniswapV2RouterAddress, getWETHAddress } from '@/config/contracts'
-import { uniswapV2RouterAbi } from '@/lib/abi/uniswapV2Router'
-import type { TokenConfig } from '@/config/tokens'
+import { useQuery } from "@tanstack/react-query"
+import { usePublicClient } from "wagmi"
+import { formatUnits, parseUnits, type Address } from "viem"
+import { useDebouncedValue } from "./useDebouncedValue"
+import { getUniswapV2RouterAddress, getWETHAddress } from "@/config/contracts"
+import { uniswapV2RouterAbi } from "@/lib/abi/uniswapV2Router"
+import type { TokenConfig } from "@/config/tokens"
 
 export interface UseSwapQuoteParams {
   /** 输入 Token */
@@ -45,40 +45,34 @@ export function useSwapQuote({
   chainId,
   enabled = true,
 }: UseSwapQuoteParams): UseSwapQuoteResult {
-  const publicClient = usePublicClient({ chainId })
-  
+  const publicClient = usePublicClient()
+
   // 对输入金额进行防抖处理，避免频繁请求
   const debouncedAmountIn = useDebouncedValue(amountIn, 400)
 
   const query = useQuery({
-    queryKey: [
-      'swap-quote',
-      chainId,
-      fromToken?.address,
-      toToken?.address,
-      debouncedAmountIn,
-    ],
+    queryKey: ["swap-quote", chainId, fromToken?.address, toToken?.address, debouncedAmountIn],
     queryFn: async () => {
       // 参数校验
       if (!publicClient) {
-        throw new Error('未连接到网络')
+        throw new Error("未连接到网络")
       }
 
       if (!chainId) {
-        throw new Error('未检测到链 ID')
+        throw new Error("未检测到链 ID")
       }
 
       if (!fromToken || !toToken) {
-        throw new Error('请选择 Token')
+        throw new Error("请选择 Token")
       }
 
-      if (!debouncedAmountIn || debouncedAmountIn === '0') {
-        throw new Error('请输入金额')
+      if (!debouncedAmountIn || debouncedAmountIn === "0") {
+        throw new Error("请输入金额")
       }
 
       const amountInNum = Number(debouncedAmountIn)
       if (isNaN(amountInNum) || amountInNum <= 0) {
-        throw new Error('金额无效')
+        throw new Error("金额无效")
       }
 
       // 获取 Router 地址
@@ -90,15 +84,15 @@ export function useSwapQuote({
       // 构建交易路径
       // 如果 token 是 ETH (0x0...)，需要使用 WETH 地址
       const wethAddress = getWETHAddress(chainId)
-      const fromAddress = fromToken.address.toLowerCase().startsWith('0x0000000')
+      const fromAddress = fromToken.address.toLowerCase().startsWith("0x0000000")
         ? wethAddress
         : (fromToken.address as Address)
-      const toAddress = toToken.address.toLowerCase().startsWith('0x0000000')
+      const toAddress = toToken.address.toLowerCase().startsWith("0x0000000")
         ? wethAddress
         : (toToken.address as Address)
 
       if (!fromAddress || !toAddress) {
-        throw new Error('无法确定 Token 地址')
+        throw new Error("无法确定 Token 地址")
       }
 
       const path: Address[] = [fromAddress, toAddress]
@@ -108,7 +102,7 @@ export function useSwapQuote({
       try {
         amountInWei = parseUnits(debouncedAmountIn, fromToken.decimals)
       } catch (err) {
-        throw new Error('金额格式错误')
+        throw new Error("金额格式错误")
       }
 
       // 调用链上合约获取报价
@@ -116,7 +110,7 @@ export function useSwapQuote({
         const amounts = await publicClient.readContract({
           address: routerAddress,
           abi: uniswapV2RouterAbi,
-          functionName: 'getAmountsOut',
+          functionName: "getAmountsOut",
           args: [amountInWei, path],
         })
 
@@ -124,7 +118,7 @@ export function useSwapQuote({
         const amountOut = amounts[1]
 
         if (!amountOut || amountOut === 0n) {
-          throw new Error('无法获取报价，可能池子流动性不足')
+          throw new Error("无法获取报价，可能池子流动性不足")
         }
 
         // 格式化输出金额
@@ -136,21 +130,21 @@ export function useSwapQuote({
         }
       } catch (err: any) {
         // 处理常见的链上错误
-        if (err.message?.includes('INSUFFICIENT_LIQUIDITY')) {
-          throw new Error('池子流动性不足，无法报价')
+        if (err.message?.includes("INSUFFICIENT_LIQUIDITY")) {
+          throw new Error("池子流动性不足，无法报价")
         }
-        if (err.message?.includes('INSUFFICIENT_INPUT_AMOUNT')) {
-          throw new Error('输入金额过小')
+        if (err.message?.includes("INSUFFICIENT_INPUT_AMOUNT")) {
+          throw new Error("输入金额过小")
         }
-        if (err.message?.includes('INSUFFICIENT_OUTPUT_AMOUNT')) {
-          throw new Error('输出金额过小')
+        if (err.message?.includes("INSUFFICIENT_OUTPUT_AMOUNT")) {
+          throw new Error("输出金额过小")
         }
-        if (err.message?.includes('execution reverted')) {
-          throw new Error('交易对不存在或流动性不足')
+        if (err.message?.includes("execution reverted")) {
+          throw new Error("交易对不存在或流动性不足")
         }
-        
+
         // 其他错误
-        throw new Error(err.message || '获取报价失败')
+        throw new Error(err.message || "获取报价失败")
       }
     },
     enabled:
@@ -171,7 +165,7 @@ export function useSwapQuote({
   })
 
   return {
-    amountOutFormatted: query.data?.amountOutFormatted || '',
+    amountOutFormatted: query.data?.amountOutFormatted || "",
     rawAmountOut: query.data?.rawAmountOut,
     isLoading: query.isLoading,
     isFetching: query.isFetching,
