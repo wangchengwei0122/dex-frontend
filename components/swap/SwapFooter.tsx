@@ -1,5 +1,5 @@
-import type { Token } from "./types"
 import { Loader2 } from "lucide-react"
+import type { Token } from "@/features/swap/engine"
 
 export interface SwapFooterProps {
   fromToken?: Token | null;
@@ -55,4 +55,3 @@ export function SwapFooter({
     </div>
   )
 }
-

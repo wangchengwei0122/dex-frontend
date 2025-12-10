@@ -6,7 +6,7 @@ import { AppButton } from "@/components/app/app-button"
 import { AppInput } from "@/components/app/app-input"
 import { AppFieldLabel } from "@/components/app/app-field-label"
 import { AppSwitch } from "@/components/app/app-switch"
-import type { SwapSettings } from "./types"
+import type { SwapSettings } from "@/features/swap/engine"
 
 export interface SwapSettingsDialogProps {
   open: boolean

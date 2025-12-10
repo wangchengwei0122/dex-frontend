@@ -4,8 +4,7 @@ import { parseUnits, type Address } from 'viem'
 import { uniswapV2RouterAbi } from '@/lib/abi/uniswapV2Router'
 import { getUniswapV2RouterAddress } from '@/config/contracts'
 import type { TokenConfig } from '@/config/tokens'
-
-export type SwapStatus = 'idle' | 'preparing' | 'pending' | 'success' | 'error'
+import type { SwapStatus } from './types'
 
 export interface UseSwapParams {
   /** 输入 Token */
@@ -284,4 +283,3 @@ export function useSwap({
     error,
   }
 }
-

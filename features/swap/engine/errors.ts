@@ -1,4 +1,5 @@
 import type { TokenConfig } from "@/config/tokens"
+import type { SwapStatus } from "./types"
 
 export type SwapErrorCode =
   | "NONE"
@@ -117,7 +118,7 @@ interface DeriveSwapErrorParams {
   allowanceLoading: boolean
 
   // swap
-  swapStatus: "idle" | "preparing" | "pending" | "success" | "error"
+  swapStatus: SwapStatus
   swapError?: Error | null
 }
 

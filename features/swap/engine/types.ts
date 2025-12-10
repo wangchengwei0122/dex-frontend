@@ -3,6 +3,8 @@ import type { TokenConfig } from "@/config/tokens"
 
 export type Side = "from" | "to"
 
+export type SwapStatus = "idle" | "preparing" | "pending" | "success" | "error"
+
 export interface SwapSettings {
   slippageBps: number
   deadlineMinutes: number

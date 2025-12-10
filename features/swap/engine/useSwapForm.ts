@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { useConnection, useChainId } from "wagmi"
 import { parseUnits, type Address } from "viem"
-import { useSwapQuote } from "@/lib/hooks/useSwapQuote"
+import { useSwapQuote } from "./useSwapQuote"
 import type { TokenConfig } from "@/config/tokens"
 import type { SwapReviewParams, SwapSettings } from "./types"
 

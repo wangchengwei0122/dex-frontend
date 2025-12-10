@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { usePublicClient } from "wagmi"
 import { formatUnits, parseUnits, type Address } from "viem"
-import { useDebouncedValue } from "./useDebouncedValue"
+import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue"
 import { getUniswapV2RouterAddress, getWETHAddress } from "@/config/contracts"
 import { uniswapV2RouterAbi } from "@/lib/abi/uniswapV2Router"
 import type { TokenConfig } from "@/config/tokens"

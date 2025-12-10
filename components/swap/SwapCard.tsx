@@ -4,25 +4,29 @@ import { useState, useEffect, useMemo, useCallback } from "react"
 import { useChainId } from "wagmi"
 import { AppPanel } from "@/components/app/app-panel"
 import { SwapHeader } from "./SwapHeader"
-import { SwapTokenRow } from "./SwapTokenRow"
+import { TokenAmountInput } from "./TokenAmountInput"
 import { SwapDirectionSwitch } from "./SwapDirectionSwitch"
 import { SwapFooter } from "./SwapFooter"
 import { SwapActionButton } from "./SwapActionButton"
 import { TokenSelectDialog } from "./TokenSelectDialog"
 import { SwapSettingsDialog } from "./SwapSettingsDialog"
-import { useSwapForm } from "./useSwapForm"
 import { useTokenBalances } from "@/lib/hooks/useTokenBalances"
-import { useTokenAllowance } from "@/lib/hooks/useTokenAllowance"
-import { useTokenApproval } from "@/lib/hooks/useTokenApproval"
-import { useSwap } from "@/lib/hooks/useSwap"
 import { getTokensByChainId } from "@/config/tokens"
 import { getUniswapV2RouterAddress } from "@/config/contracts"
 import { getExplorerTxUrl } from "@/lib/utils"
 import { formatUnits, parseUnits } from "viem"
-import type { Token, Side, SwapReviewParams } from "./types"
+import {
+  deriveSwapError,
+  useSwapForm,
+  useTokenAllowance,
+  useTokenApproval,
+  useSwap,
+  type Side,
+  type SwapError,
+  type SwapReviewParams,
+  type Token,
+} from "@/features/swap/engine"
 import type { TokenConfig } from "@/config/tokens"
-import { deriveSwapError } from "./errors"
-import type { SwapError } from "./errors"
 import type { SupportedChainId } from "@/config/contracts"
 
 export interface SwapCardProps {
@@ -57,6 +61,19 @@ export function SwapCard({
     const to = tokens.find((t) => t.symbol === defaultToSymbol) || tokens[1] || tokens[0] || null
     return to && to.address !== defaultFromToken?.address ? to : null
   }, [tokens, defaultToSymbol, defaultFromToken])
+
+  const getBalanceLabel = useCallback(
+    (token?: TokenConfig | null) => {
+      if (!token) return undefined
+      const value = balances[token.address]
+      if (value === undefined) {
+        return balancesLoading ? undefined : "0.0"
+      }
+      const num = Number(value)
+      return Number.isNaN(num) ? value : num.toFixed(4)
+    },
+    [balances, balancesLoading]
+  )
 
   const [tokenDialogOpen, setTokenDialogOpen] = useState(false)
   const [tokenDialogSide, setTokenDialogSide] = useState<Side | null>(null)
@@ -405,37 +422,25 @@ export function SwapCard({
         <SwapHeader onOpenSettings={() => setSettingsDialogOpen(true)} />
 
         <div className="space-y-4">
-          <SwapTokenRow
+          <TokenAmountInput
             side="from"
             label="From"
             token={fromToken}
             amount={fromAmount}
-            balance={
-              fromToken && balances[fromToken.address]
-                ? Number(balances[fromToken.address])
-                : balancesLoading
-                  ? undefined
-                  : 0
-            }
+            balance={getBalanceLabel(fromToken)}
             onAmountChange={handleFromAmountChange}
             onClickToken={() => handleOpenTokenDialog("from")}
           />
 
           <SwapDirectionSwitch onSwitch={handleSwitch} />
 
-          <SwapTokenRow
+          <TokenAmountInput
             side="to"
             label="To"
             token={toToken}
             amount={toAmount}
-            balance={
-              toToken && balances[toToken.address]
-                ? Number(balances[toToken.address])
-                : balancesLoading
-                  ? undefined
-                  : 0
-            }
-            readOnlyAmount={true}
+            balance={getBalanceLabel(toToken)}
+            readOnlyAmount
             onClickToken={() => handleOpenTokenDialog("to")}
           />
 

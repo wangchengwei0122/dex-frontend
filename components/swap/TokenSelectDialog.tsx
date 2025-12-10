@@ -5,7 +5,7 @@ import { AppDialog, AppDialogContent } from "@/components/app/app-dialog"
 import { AppInput } from "@/components/app/app-input"
 import { Check } from "lucide-react"
 import { cn } from "@/lib/utils"
-import type { Side, Token } from "./types"
+import type { Side, Token } from "@/features/swap/engine"
 
 export interface TokenSelectDialogProps {
   open: boolean;
@@ -104,4 +104,3 @@ export function TokenSelectDialog({
     </AppDialog>
   )
 }
-

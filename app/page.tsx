@@ -1,7 +1,7 @@
 "use client"
 
 import { SwapCard } from "@/components/swap"
-import type { SwapReviewParams } from "@/components/swap"
+import type { SwapReviewParams } from "@/features/swap/engine"
 
 export default function Home() {
   const handleReview = (params: SwapReviewParams) => {
