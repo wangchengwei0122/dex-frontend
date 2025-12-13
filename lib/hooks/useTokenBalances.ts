@@ -44,8 +44,12 @@ export function useTokenBalances({ tokens }: UseTokenBalancesParams): TokenBalan
       const balancePromises = currentChainTokens.map(async (token) => {
         try {
           let balance: bigint
+          const isNativeToken =
+            token.isNative ||
+            token.address === 'native' ||
+            token.address === '0x0000000000000000000000000000000000000000'
 
-          if (token.isNative) {
+          if (isNativeToken) {
             // 查询原生币余额
             const balanceResult = await publicClient.getBalance({ address })
             balance = balanceResult
@@ -87,4 +91,3 @@ export function useTokenBalances({ tokens }: UseTokenBalancesParams): TokenBalan
     data: balances || {},
   }
 }
-

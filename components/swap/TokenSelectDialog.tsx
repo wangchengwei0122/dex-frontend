@@ -12,6 +12,8 @@ export interface TokenSelectDialogProps {
   side: Side;
   tokens: Token[];
   selectedToken?: Token | null;
+  otherSideToken?: Token | null;
+  isSupportedChain: boolean;
   onClose: () => void;
   onSelectToken: (side: Side, token: Token) => void;
 }
@@ -21,6 +23,8 @@ export function TokenSelectDialog({
   side,
   tokens,
   selectedToken,
+  otherSideToken,
+  isSupportedChain,
   onClose,
   onSelectToken,
 }: TokenSelectDialogProps) {
@@ -29,16 +33,16 @@ export function TokenSelectDialog({
   const filteredTokens = useMemo(() => {
     const query = searchQuery.toLowerCase().trim();
     if (!query) return tokens;
-    
-    return tokens.filter(
-      token =>
-        token.symbol.toLowerCase().includes(query) ||
-        token.name.toLowerCase().includes(query) ||
-        token.address.toLowerCase().includes(query)
-    );
+
+    return tokens.filter((token) => {
+      const symbolMatch = token.symbol.toLowerCase().includes(query);
+      const nameMatch = token.name.toLowerCase().includes(query);
+      return symbolMatch || nameMatch;
+    });
   }, [tokens, searchQuery]);
 
   const handleSelect = (token: Token) => {
+    if (otherSideToken && token.address === otherSideToken.address) return;
     onSelectToken(side, token);
     setSearchQuery("");
     onClose();
@@ -53,52 +57,72 @@ export function TokenSelectDialog({
       >
         <div className="space-y-4">
           <AppInput
-            placeholder="Search by name, symbol or address"
+            placeholder="Search by name or symbol"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full"
+            disabled={!isSupportedChain}
           />
 
-          <div className="max-h-[400px] overflow-y-auto space-y-1 pr-2">
-            {filteredTokens.length === 0 ? (
-              <div className="py-8 text-center text-sm text-zinc-500">
-                No tokens found
+          {!isSupportedChain ? (
+            <div className="max-h-[400px] overflow-y-auto space-y-1 pr-2">
+              <div className="py-8 text-center text-sm text-zinc-400">
+                Current network is not supported. Please switch to Ethereum Mainnet or Sepolia.
               </div>
-            ) : (
-              filteredTokens.map((token) => {
-                const isSelected = selectedToken?.address === token.address;
-                
-                return (
-                  <button
-                    key={token.address}
-                    onClick={() => handleSelect(token)}
-                    className={cn(
-                      "w-full flex items-center justify-between gap-3 p-3 rounded-xl transition-colors",
-                      "hover:bg-[color:var(--black-700)]",
-                      isSelected && "bg-[color:var(--black-700)] border border-[color:var(--gold-border)]"
-                    )}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#C9A227] to-[#F6D27A] flex items-center justify-center text-xs font-bold text-black">
-                        {token.symbol.slice(0, 2)}
-                      </div>
-                      <div className="text-left">
-                        <div className="text-sm font-medium text-zinc-50">
-                          {token.symbol}
+            </div>
+          ) : (
+            <div className="max-h-[400px] overflow-y-auto space-y-1 pr-2">
+              {filteredTokens.length === 0 ? (
+                <div className="py-8 text-center text-sm text-zinc-500">
+                  No tokens found
+                </div>
+              ) : (
+                filteredTokens.map((token) => {
+                  const isSelected = selectedToken?.address === token.address;
+                  const isBlocked = otherSideToken && otherSideToken.address === token.address;
+
+                  return (
+                    <button
+                      key={token.address}
+                      onClick={() => handleSelect(token)}
+                      disabled={isBlocked}
+                      className={cn(
+                        "w-full flex items-center justify-between gap-3 p-3 rounded-xl transition-colors text-left",
+                        "hover:bg-[color:var(--black-700)]",
+                        isSelected && "bg-[color:var(--black-700)] border border-[color:var(--gold-border)]",
+                        isBlocked && "opacity-50 cursor-not-allowed"
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#C9A227] to-[#F6D27A] flex items-center justify-center text-xs font-bold text-black">
+                          {token.symbol.slice(0, 2)}
                         </div>
-                        <div className="text-xs text-zinc-400">
-                          {token.name}
+                        <div className="text-left">
+                          <div className="text-sm font-medium text-zinc-50">
+                            {token.name}
+                          </div>
+                          <div className="text-xs text-zinc-400">
+                            {token.symbol}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    {isSelected && (
-                      <Check className="h-4 w-4 text-[#C9A227]" />
-                    )}
-                  </button>
-                );
-              })
-            )}
-          </div>
+                      <div className="flex items-center gap-2">
+                        {isBlocked && (
+                          <span className="text-[10px] text-red-300">Already selected on the other side</span>
+                        )}
+                        {isSelected && (
+                          <Check className="h-4 w-4 text-[#C9A227]" />
+                        )}
+                        {!isBlocked && !isSelected && (
+                          <span className="text-sm text-zinc-300">{token.symbol}</span>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })
+              )}
+            </div>
+          )}
         </div>
       </AppDialogContent>
     </AppDialog>

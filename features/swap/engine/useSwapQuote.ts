@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query"
 import { usePublicClient } from "wagmi"
 import { formatUnits, parseUnits, type Address } from "viem"
 import { useDebouncedValue } from "@/lib/hooks/useDebouncedValue"
-import { getUniswapV2RouterAddress, getWETHAddress } from "@/config/contracts"
+import { getDexChainConfig } from "@/config/chains"
 import { uniswapV2RouterAbi } from "@/lib/abi/uniswapV2Router"
 import type { TokenConfig } from "@/config/tokens"
 
@@ -76,20 +76,21 @@ export function useSwapQuote({
       }
 
       // 获取 Router 地址
-      const routerAddress = getUniswapV2RouterAddress(chainId)
-      if (!routerAddress) {
+      const chainConfig = getDexChainConfig(chainId)
+      const routerAddress = chainConfig?.routerAddress
+      const wethAddress = chainConfig?.wethAddress
+
+      if (!chainConfig || !routerAddress || !wethAddress) {
         throw new Error(`不支持的链 ID: ${chainId}`)
       }
 
       // 构建交易路径
       // 如果 token 是 ETH (0x0...)，需要使用 WETH 地址
-      const wethAddress = getWETHAddress(chainId)
-      const fromAddress = fromToken.address.toLowerCase().startsWith("0x0000000")
-        ? wethAddress
-        : (fromToken.address as Address)
-      const toAddress = toToken.address.toLowerCase().startsWith("0x0000000")
-        ? wethAddress
-        : (toToken.address as Address)
+      const isNative = (token: TokenConfig) =>
+        token.isNative || token.address === "native" || token.address.toLowerCase().startsWith("0x0000000")
+
+      const fromAddress = isNative(fromToken) ? wethAddress : (fromToken.address as Address)
+      const toAddress = isNative(toToken) ? wethAddress : (toToken.address as Address)
 
       if (!fromAddress || !toAddress) {
         throw new Error("无法确定 Token 地址")

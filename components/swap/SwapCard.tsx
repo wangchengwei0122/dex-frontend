@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useMemo, useCallback } from "react"
-import { useChainId } from "wagmi"
+import { useChainId, useSwitchChain } from "wagmi"
 import { AppPanel } from "@/components/app/app-panel"
 import { SwapHeader } from "./SwapHeader"
 import { TokenAmountInput } from "./TokenAmountInput"
@@ -12,7 +12,7 @@ import { TokenSelectDialog } from "./TokenSelectDialog"
 import { SwapSettingsDialog } from "./SwapSettingsDialog"
 import { useTokenBalances } from "@/lib/hooks/useTokenBalances"
 import { getTokensByChainId } from "@/config/tokens"
-import { getUniswapV2RouterAddress } from "@/config/contracts"
+import { getDexChainConfig, PREFERRED_CHAIN_ID, SUPPORTED_CHAIN_IDS } from "@/config/chains"
 import { getExplorerTxUrl } from "@/lib/utils"
 import { formatUnits, parseUnits } from "viem"
 import {
@@ -27,7 +27,6 @@ import {
   type Token,
 } from "@/features/swap/engine"
 import type { TokenConfig } from "@/config/tokens"
-import type { SupportedChainId } from "@/config/contracts"
 
 export interface SwapCardProps {
   tokens?: Token[]
@@ -36,8 +35,6 @@ export interface SwapCardProps {
   onReview?: (params: SwapReviewParams) => void
 }
 
-const SUPPORTED_CHAIN_IDS: SupportedChainId[] = [1, 11155111]
-
 export function SwapCard({
   tokens: propTokens,
   defaultFromSymbol = "ETH",
@@ -45,21 +42,53 @@ export function SwapCard({
   onReview,
 }: SwapCardProps) {
   const chainIdFromWagmi = useChainId()
+  const { switchChain, isPending: isSwitchingChain } = useSwitchChain()
+  const dexChainConfig = useMemo(() => getDexChainConfig(chainIdFromWagmi), [chainIdFromWagmi])
+  const isSupportedChain = Boolean(dexChainConfig)
+  const recommendedChain = getDexChainConfig(PREFERRED_CHAIN_ID)
 
-  const tokenConfigs = useMemo(() => getTokensByChainId(chainIdFromWagmi), [chainIdFromWagmi])
-  const tokens = useMemo(() => propTokens || tokenConfigs, [propTokens, tokenConfigs])
+  const tokenConfigs = useMemo(
+    () => (isSupportedChain ? getTokensByChainId(chainIdFromWagmi) : []),
+    [chainIdFromWagmi, isSupportedChain]
+  )
+  const tokens = useMemo(
+    () => (isSupportedChain ? propTokens || tokenConfigs : []),
+    [isSupportedChain, propTokens, tokenConfigs]
+  )
+  const supportedNetworkLabel = useMemo(
+    () =>
+      SUPPORTED_CHAIN_IDS.map(
+        (id) => getDexChainConfig(id)?.name || `Chain ${id}`
+      ).join(" or "),
+    []
+  )
 
   const { data: balances, isLoading: balancesLoading } = useTokenBalances({
     tokens,
   })
 
   const defaultFromToken = useMemo(() => {
-    return tokens.find((t) => t.symbol === defaultFromSymbol) || tokens[0] || null
-  }, [tokens, defaultFromSymbol])
+    if (!tokens.length) return null
+    return (
+      tokens.find((t) => t.symbol === defaultFromSymbol && t.chainId === chainIdFromWagmi) ||
+      tokens.find((t) => t.isNative) ||
+      tokens[0] ||
+      null
+    )
+  }, [tokens, defaultFromSymbol, chainIdFromWagmi])
 
   const defaultToToken = useMemo(() => {
-    const to = tokens.find((t) => t.symbol === defaultToSymbol) || tokens[1] || tokens[0] || null
-    return to && to.address !== defaultFromToken?.address ? to : null
+    if (!tokens.length) return null
+
+    const toBySymbol = tokens.find(
+      (t) => t.symbol === defaultToSymbol && t.address !== defaultFromToken?.address
+    )
+    if (toBySymbol) return toBySymbol
+
+    const stable =
+      tokens.find((t) => t.isStable && t.address !== defaultFromToken?.address) ||
+      tokens.find((t) => t.address !== defaultFromToken?.address)
+    return stable || null
   }, [tokens, defaultToSymbol, defaultFromToken])
 
   const getBalanceLabel = useCallback(
@@ -103,27 +132,12 @@ export function SwapCard({
     settings,
     setSettings,
   } = useSwapForm({
+    tokens,
     defaultFromToken,
     defaultToToken,
   })
 
-  useEffect(() => {
-    if (!tokens.length) return
-
-    const fromTokenExists = fromToken && tokens.some((t) => t.address === fromToken.address)
-    const toTokenExists = toToken && tokens.some((t) => t.address === toToken.address)
-
-    if (!fromTokenExists) {
-      setFromToken(defaultFromToken)
-    }
-    if (!toTokenExists) {
-      setToToken(defaultToToken)
-    }
-  }, [tokens, fromToken, toToken, defaultFromToken, defaultToToken, setFromToken, setToToken])
-
-  const routerAddress = useMemo(() => {
-    return chainId ? getUniswapV2RouterAddress(chainId) : undefined
-  }, [chainId])
+  const routerAddress = dexChainConfig?.routerAddress
 
   const fromTokenConfig = fromToken || null
   const toTokenConfig = toToken || null
@@ -137,7 +151,7 @@ export function SwapCard({
     owner: address,
     spender: routerAddress,
     chainId,
-    enabled: Boolean(fromTokenConfig && address && routerAddress && isConnected),
+    enabled: Boolean(fromTokenConfig && address && routerAddress && isConnected && isSupportedChain),
   })
 
   const {
@@ -297,6 +311,22 @@ export function SwapCard({
       }
     }
 
+    if (!isSupportedChain) {
+      const targetChainId = recommendedChain?.chainId ?? SUPPORTED_CHAIN_IDS[0]
+      const label = recommendedChain ? `Switch to ${recommendedChain.name}` : "Switch network"
+      return {
+        label,
+        disabled: !switchChain,
+        loading: isSwitchingChain,
+        onClick: () => {
+          if (switchChain) {
+            switchChain({ chainId: targetChainId })
+          }
+        },
+        type: "network" as const,
+      }
+    }
+
     if (approvePending) {
       return {
         label: "Approving...",
@@ -387,6 +417,10 @@ export function SwapCard({
     fromTokenConfig?.isNative,
     handleReview,
     isConnected,
+    isSupportedChain,
+    isSwitchingChain,
+    recommendedChain,
+    switchChain,
     swap,
     allowanceLoading,
   ])
@@ -420,6 +454,15 @@ export function SwapCard({
     <>
       <AppPanel variant="dark" className="space-y-6">
         <SwapHeader onOpenSettings={() => setSettingsDialogOpen(true)} />
+
+        {isConnected && !isSupportedChain && (
+          <div className="rounded-xl border border-red-500/40 bg-red-500/10 p-3">
+            <div className="text-sm font-semibold text-red-100">Unsupported network</div>
+            <div className="text-xs text-red-200">
+              Please switch to {supportedNetworkLabel} to use this DEX.
+            </div>
+          </div>
+        )}
 
         <div className="space-y-4">
           <TokenAmountInput
@@ -474,7 +517,7 @@ export function SwapCard({
                 rel="noreferrer"
                 className="text-gold hover:underline"
               >
-                View on Etherscan
+                View on explorer
               </a>
             </div>
           )}
@@ -486,6 +529,8 @@ export function SwapCard({
         side={tokenDialogSide || "from"}
         tokens={tokens}
         selectedToken={tokenDialogSide === "from" ? fromToken : toToken}
+        otherSideToken={tokenDialogSide === "from" ? toToken : fromToken}
+        isSupportedChain={isSupportedChain}
         onClose={() => setTokenDialogOpen(false)}
         onSelectToken={handleSelectToken}
       />

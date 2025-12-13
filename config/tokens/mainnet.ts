@@ -12,6 +12,17 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     decimals: 18,
     isNative: true,
     wrappedAddress: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2', // Mainnet WETH
+    priority: 1,
+    tags: ['bluechip'],
+  },
+  {
+    chainId: 1,
+    address: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+    symbol: 'WETH',
+    name: 'Wrapped Ether',
+    decimals: 18,
+    priority: 2,
+    tags: ['bluechip'],
   },
   {
     chainId: 1,
@@ -19,6 +30,9 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     symbol: 'USDC',
     name: 'USD Coin',
     decimals: 6,
+    priority: 3,
+    isStable: true,
+    tags: ['stable'],
   },
   {
     chainId: 1,
@@ -26,6 +40,9 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     symbol: 'USDT',
     name: 'Tether USD',
     decimals: 6,
+    priority: 4,
+    isStable: true,
+    tags: ['stable'],
   },
   {
     chainId: 1,
@@ -33,6 +50,7 @@ export const MAINNET_TOKENS: TokenConfig[] = [
     symbol: 'WBTC',
     name: 'Wrapped Bitcoin',
     decimals: 8,
+    priority: 5,
+    tags: ['bluechip'],
   },
 ]
-

@@ -54,16 +54,17 @@ export function useTokenApproval({
 }: UseTokenApprovalParams): UseTokenApprovalResult {
   const [error, setError] = useState<Error | null>(null)
   const [txHash, setTxHash] = useState<`0x${string}` | undefined>()
+  const isNativeToken = token?.isNative || token?.address === 'native'
 
   // 模拟合约调用
   const { data: simulateData } = useSimulateContract({
-    address: token && !token.isNative ? (token.address as Address) : undefined,
+    address: token && !isNativeToken ? (token.address as Address) : undefined,
     abi: erc20Abi,
     functionName: "approve",
     args: spender ? [spender, maxUint256] : undefined,
     chainId,
     query: {
-      enabled: Boolean(token && !token.isNative && spender),
+      enabled: Boolean(token && !isNativeToken && spender),
     },
   })
 
@@ -121,7 +122,7 @@ export function useTokenApproval({
   // 执行 approve 操作
   const approveMax = async (): Promise<void> => {
     // 前置校验
-    if (!token || token.isNative || !spender) {
+    if (!token || isNativeToken || !spender) {
       return
     }
 

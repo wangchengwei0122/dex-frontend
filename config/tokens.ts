@@ -7,27 +7,29 @@ import { SEPOLIA_TOKENS } from './tokens/sepolia'
  */
 export interface TokenConfig {
   chainId: number
-  address: `0x${string}` // ERC20 地址，原生币使用 0x0000...0000
+  address: `0x${string}` | "native" // ERC20 地址，原生币使用 0x0000...0000 或 'native'
   symbol: string
   name: string
   decimals: number
   logoURI?: string
   isNative?: boolean // 原生币（ETH）标记
   wrappedAddress?: `0x${string}` // 对应 WETH 地址（可选）
+  priority?: number // 数字越小优先级越高
+  isStable?: boolean // 稳定币标记
+  tags?: string[]
 }
 
 /**
  * 根据 chainId 获取该链的 Token 列表
  */
 export function getTokensByChainId(chainId: number): TokenConfig[] {
-  switch (chainId) {
-    case 1:
-      return MAINNET_TOKENS
-    case 11155111:
-      return SEPOLIA_TOKENS
-    default:
-      return []
-  }
+  const list =
+    chainId === 1
+      ? MAINNET_TOKENS
+      : chainId === 11155111
+        ? SEPOLIA_TOKENS
+        : []
+  return [...list].sort((a, b) => (a.priority ?? 999) - (b.priority ?? 999))
 }
 
 /**
@@ -42,4 +44,3 @@ export function tokenConfigToToken(config: TokenConfig) {
     logoURI: config.logoURI,
   }
 }
-

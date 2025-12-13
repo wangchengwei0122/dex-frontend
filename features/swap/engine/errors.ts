@@ -1,4 +1,5 @@
 import type { TokenConfig } from "@/config/tokens"
+import { SUPPORTED_CHAIN_IDS } from "@/config/chains"
 import type { SwapStatus } from "./types"
 
 export type SwapErrorCode =
@@ -142,18 +143,17 @@ export function deriveSwapError(params: DeriveSwapErrorParams): SwapError {
     swapError,
   } = params
 
+  const allowedChainIds =
+    supportedChainIds && supportedChainIds.length > 0 ? supportedChainIds : SUPPORTED_CHAIN_IDS
+  const isSupportedChain = chainId !== undefined && allowedChainIds.includes(chainId)
+
   // 1) 钱包未连接
   if (!isConnected) {
     return createSwapError("WALLET_DISCONNECTED")
   }
 
   // 2) 网络不支持
-  if (
-    supportedChainIds &&
-    supportedChainIds.length > 0 &&
-    chainId !== undefined &&
-    !supportedChainIds.includes(chainId)
-  ) {
+  if (!isSupportedChain) {
     return createSwapError("WRONG_NETWORK")
   }
 

@@ -12,6 +12,17 @@ export const SEPOLIA_TOKENS: TokenConfig[] = [
     decimals: 18,
     isNative: true,
     wrappedAddress: '0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14', // Sepolia WETH
+    priority: 1,
+    tags: ['bluechip'],
+  },
+  {
+    chainId: 11155111,
+    address: '0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14',
+    symbol: 'WETH',
+    name: 'Wrapped Ether',
+    decimals: 18,
+    priority: 2,
+    tags: ['bluechip'],
   },
   {
     chainId: 11155111,
@@ -21,6 +32,9 @@ export const SEPOLIA_TOKENS: TokenConfig[] = [
     symbol: 'USDC',
     name: 'USD Coin',
     decimals: 6,
+    priority: 3,
+    isStable: true,
+    tags: ['stable'],
   },
   {
     chainId: 11155111,
@@ -30,6 +44,9 @@ export const SEPOLIA_TOKENS: TokenConfig[] = [
     symbol: 'USDT',
     name: 'Tether USD',
     decimals: 6,
+    priority: 4,
+    isStable: true,
+    tags: ['stable'],
   },
   {
     chainId: 11155111,
@@ -39,6 +56,7 @@ export const SEPOLIA_TOKENS: TokenConfig[] = [
     symbol: 'WBTC',
     name: 'Wrapped Bitcoin',
     decimals: 8,
+    priority: 5,
+    tags: ['bluechip'],
   },
 ]
-

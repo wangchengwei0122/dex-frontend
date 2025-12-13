@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useWriteContract, useWaitForTransactionReceipt, useSimulateContract } from 'wagmi'
 import { parseUnits, type Address } from 'viem'
 import { uniswapV2RouterAbi } from '@/lib/abi/uniswapV2Router'
-import { getUniswapV2RouterAddress } from '@/config/contracts'
+import { getDexChainConfig } from '@/config/chains'
 import type { TokenConfig } from '@/config/tokens'
 import type { SwapStatus } from './types'
 
@@ -78,7 +78,7 @@ export function useSwap({
   const [txHash, setTxHash] = useState<`0x${string}` | undefined>()
 
   // 获取 Router 地址
-  const routerAddress = chainId ? getUniswapV2RouterAddress(chainId) : undefined
+  const routerAddress = chainId ? getDexChainConfig(chainId)?.routerAddress : undefined
 
   // 计算数量（bigint）
   const amountInWei = (() => {

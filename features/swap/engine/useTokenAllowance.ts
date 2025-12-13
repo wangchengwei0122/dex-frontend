@@ -52,12 +52,14 @@ export function useTokenAllowance({
 }: UseTokenAllowanceParams): UseTokenAllowanceResult {
   const publicClient = usePublicClient({ chainId })
 
+  const isNativeToken = token?.isNative || token?.address === 'native'
+
   // 如果满足以下任一条件，直接返回 allowance = 0n（原生币返回最大额度）
   const shouldSkipQuery =
     !token ||
     !owner ||
     !spender ||
-    token.isNative ||
+    isNativeToken ||
     enabled === false ||
     !chainId
 
@@ -75,7 +77,7 @@ export function useTokenAllowance({
         throw new Error('未连接到网络')
       }
 
-      if (!token || !owner || !spender) {
+      if (!token || !owner || !spender || isNativeToken) {
         throw new Error('缺少必要参数')
       }
 
@@ -129,4 +131,3 @@ export function useTokenAllowance({
     },
   }
 }
-
