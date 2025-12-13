@@ -1,5 +1,5 @@
 import TradePage from "@/components/trade/TradePage"
 
-export default function Home() {
+export default function TradeRoute() {
   return <TradePage />
 }
