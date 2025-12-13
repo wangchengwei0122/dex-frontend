@@ -284,3 +284,54 @@
     border-color: rgba(201, 162, 39, 0.4) !important;
   }
 }
+
+@keyframes dex-float-soft {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  33% {
+    transform: translate3d(var(--dx1, 10px), var(--dy1, -14px), 0) scale(1.05);
+  }
+  66% {
+    transform: translate3d(var(--dx2, -12px), var(--dy2, 18px), 0) scale(1.04);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes dex-bubble-float {
+  0% {
+    transform: translate3d(0, 0, 0) rotate(var(--rotate-from)) scale(1);
+  }
+  25% {
+    transform: translate3d(
+      calc(var(--move-x) * 0.4),
+      calc(var(--move-y) * 0.3),
+      0
+    )
+    rotate(calc((var(--rotate-from) + var(--rotate-to)) / 2))
+    scale(1.01);
+  }
+  50% {
+    transform: translate3d(
+      calc(var(--move-x)),
+      calc(var(--move-y)),
+      0
+    )
+    rotate(var(--rotate-to))
+    scale(1.02);
+  }
+  75% {
+    transform: translate3d(
+      calc(var(--move-x) * 0.2),
+      calc(var(--move-y) * 0.8),
+      0
+    )
+    rotate(calc((var(--rotate-from) + var(--rotate-to)) / 2))
+    scale(1.01);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) rotate(var(--rotate-from)) scale(1);
+  }
+}

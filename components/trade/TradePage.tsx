@@ -17,10 +17,7 @@ function useQueryTokenSymbols() {
     return Number.isFinite(parsed) ? parsed : undefined
   }, [chainParam])
 
-  const allTokens = useMemo(
-    () => SUPPORTED_CHAIN_IDS.flatMap((id) => getTokensByChainId(id)),
-    []
-  )
+  const allTokens = useMemo(() => SUPPORTED_CHAIN_IDS.flatMap((id) => getTokensByChainId(id)), [])
 
   const resolveSymbol = useCallback(
     (value?: string) => {
@@ -43,10 +40,7 @@ function useQueryTokenSymbols() {
     [allTokens, chainIdFromQuery]
   )
 
-  const defaultFromSymbol = useMemo(
-    () => resolveSymbol(fromParam),
-    [fromParam, resolveSymbol]
-  )
+  const defaultFromSymbol = useMemo(() => resolveSymbol(fromParam), [fromParam, resolveSymbol])
   const defaultToSymbol = useMemo(() => resolveSymbol(toParam), [resolveSymbol, toParam])
 
   return { defaultFromSymbol, defaultToSymbol }
@@ -56,7 +50,7 @@ export default function TradePage() {
   const { defaultFromSymbol, defaultToSymbol } = useQueryTokenSymbols()
 
   return (
-    <div className="min-h-screen bg-[#050507] text-zinc-50">
+    <div className="min-h-screen  text-zinc-50">
       <div className="mx-auto max-w-2xl px-4 py-10 space-y-8">
         <SwapCard defaultFromSymbol={defaultFromSymbol} defaultToSymbol={defaultToSymbol} />
       </div>
