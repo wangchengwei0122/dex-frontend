@@ -26,5 +26,20 @@ export interface SwapReviewParams {
   recipient: Address
 }
 
+export interface UserPoolPosition {
+  poolId: string
+  chainId: number
+  pairAddress: Address
+  token0: TokenConfig
+  token1: TokenConfig
+  lpBalance: bigint
+  lpTotalSupply: bigint
+  sharePercent: number
+  reserve0: bigint
+  reserve1: bigint
+  pooledToken0: string
+  pooledToken1: string
+}
+
 // UI 侧使用 TokenConfig 作为 Token 类型，避免重复定义
 export type Token = TokenConfig
