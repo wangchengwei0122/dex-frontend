@@ -67,7 +67,7 @@ export function useUserPools({ chainId, account }: UseUserPoolsParams): UseUserP
         { address: pool.pairAddress, abi: uniswapV2PairAbi, functionName: "token1" } as const,
       ])
 
-      const multicallResult = await publicClient.multicall({
+      const { results = [] } = await publicClient.multicall({
         allowFailure: true,
         contracts,
       })
@@ -77,7 +77,7 @@ export function useUserPools({ chainId, account }: UseUserPoolsParams): UseUserP
       for (let i = 0; i < pools.length; i++) {
         const pool = pools[i]
         const [reservesResult, totalSupplyResult, balanceResult, token0Result, token1Result] =
-          multicallResult.results.slice(i * 5, i * 5 + 5)
+          results.slice(i * 5, i * 5 + 5) || []
 
         if (
           !reservesResult ||

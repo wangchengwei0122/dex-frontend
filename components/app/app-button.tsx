@@ -46,6 +46,15 @@ export interface AppButtonProps
 
 const AppButton = React.forwardRef<HTMLButtonElement, AppButtonProps>(
   ({ className, variant, size, loading, children, disabled, ...props }, ref) => {
+    const child = props.asChild
+      ? (React.Children.toArray(children).find(React.isValidElement) as React.ReactElement | null)
+      : (
+          <>
+            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin text-amber-200" />}
+            {children}
+          </>
+        )
+
     return (
       <Button
         ref={ref}
@@ -62,8 +71,7 @@ const AppButton = React.forwardRef<HTMLButtonElement, AppButtonProps>(
         }
         {...props}
       >
-        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin text-amber-200" />}
-        {children}
+        {child}
       </Button>
     )
   }
