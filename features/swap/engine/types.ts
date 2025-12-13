@@ -21,6 +21,7 @@ export interface SwapReviewParams {
   deadline: number
   humanAmountIn: string
   humanAmountOut: string
+  humanAmountOutMin: string
   slippageBps: number
   recipient: Address
 }

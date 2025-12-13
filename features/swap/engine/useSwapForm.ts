@@ -4,8 +4,10 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { useConnection, useChainId } from "wagmi"
 import { parseUnits, type Address } from "viem"
 import { useSwapQuote } from "./useSwapQuote"
+import { usePairReserves } from "./usePairReserves"
 import type { TokenConfig } from "@/config/tokens"
 import { getDexChainConfig } from "@/config/chains"
+import { calcPriceImpact } from "./utils"
 import type { SwapReviewParams, SwapSettings } from "./types"
 
 export interface UseSwapFormParams {
@@ -24,6 +26,7 @@ export interface UseSwapFormResult {
   chainId?: number
   address?: Address
   reviewParams: SwapReviewParams | null
+  priceImpactPercent?: number
   setFromToken: (token: TokenConfig | null) => void
   setToToken: (token: TokenConfig | null) => void
   setFromAmount: (value: string) => void
@@ -109,7 +112,9 @@ export function useSwapForm(params?: UseSwapFormParams): UseSwapFormResult {
 
   const {
     amountOutFormatted,
-    rawAmountOut,
+    amountOutWei,
+    amountOutMinWei,
+    amountOutMinFormatted,
     isLoading: isLoadingQuote,
     isFetching: isFetchingQuote,
     error: quoteError,
@@ -117,6 +122,7 @@ export function useSwapForm(params?: UseSwapFormParams): UseSwapFormResult {
     fromToken,
     toToken,
     amountIn: fromAmount,
+    slippageBps: settings.slippageBps,
     chainId,
     enabled: isConnected && isSupportedChain,
   })
@@ -152,19 +158,26 @@ export function useSwapForm(params?: UseSwapFormParams): UseSwapFormResult {
     }
   }, [fromAmount, fromToken])
 
-  const amountOutMin = useMemo(() => {
-    if (!rawAmountOut || !toToken) return null
-    const slippageMultiplier = BigInt(10000 - settings.slippageBps)
-    const min = (rawAmountOut * slippageMultiplier) / BigInt(10000)
-    return min > 0n ? min : null
-  }, [rawAmountOut, settings.slippageBps, toToken])
+  const { reserveIn, reserveOut } = usePairReserves({
+    fromToken,
+    toToken,
+    chainId,
+  })
+
+  const priceImpactPercent = useMemo(() => {
+    if (!reserveIn || !reserveOut || !amountInParsed || !amountOutWei) {
+      return undefined
+    }
+    const impact = calcPriceImpact(amountInParsed, amountOutWei, reserveIn, reserveOut)
+    return Number.isFinite(impact) ? impact : undefined
+  }, [amountInParsed, amountOutWei, reserveIn, reserveOut])
 
   const reviewParams = useMemo<SwapReviewParams | null>(() => {
     if (
       !fromToken ||
       !toToken ||
       !amountInParsed ||
-      !amountOutMin ||
+      !amountOutMinWei ||
       !chainId ||
       !address ||
       !toAmount
@@ -190,17 +203,20 @@ export function useSwapForm(params?: UseSwapFormParams): UseSwapFormResult {
       toToken,
       path: [fromAddress, toAddress],
       amountIn: amountInParsed,
-      amountOutMin,
+      amountOutMin: amountOutMinWei,
       deadline,
       humanAmountIn: fromAmount,
-      humanAmountOut: toAmount,
+      humanAmountOut: amountOutFormatted || toAmount,
+      humanAmountOutMin: amountOutMinFormatted || "",
       slippageBps: settings.slippageBps,
       recipient: address,
     }
   }, [
     address,
     amountInParsed,
-    amountOutMin,
+    amountOutFormatted,
+    amountOutMinFormatted,
+    amountOutMinWei,
     chainId,
     fromAmount,
     fromToken,
@@ -259,6 +275,7 @@ export function useSwapForm(params?: UseSwapFormParams): UseSwapFormResult {
     chainId,
     address,
     reviewParams,
+    priceImpactPercent,
     setFromToken,
     setToToken,
     setFromAmount,

@@ -13,6 +13,8 @@ export interface UseSwapQuoteParams {
   toToken?: TokenConfig | null
   /** 输入金额（人类可读格式） */
   amountIn: string
+  /** 滑点（基点） */
+  slippageBps: number
   /** 当前链 ID */
   chainId?: number
   /** 是否启用查询（外部控制） */
@@ -23,15 +25,23 @@ export interface UseSwapQuoteResult {
   /** 输出金额（格式化后的人类可读值） */
   amountOutFormatted: string
   /** 原始输出金额（bigint） */
-  rawAmountOut?: bigint
+  amountOutWei?: bigint
+  /** 滑点扣除后的最小接收金额（bigint） */
+  amountOutMinWei?: bigint
+  /** 最小接收金额（格式化） */
+  amountOutMinFormatted: string
   /** 是否正在加载 */
   isLoading: boolean
   /** 是否正在获取数据 */
   isFetching: boolean
   /** 错误信息 */
   error: Error | null
-  /** 价格影响（百分比） */
-  priceImpact?: number
+}
+
+function applySlippage(amountOut: bigint, slippageBps: number): bigint {
+  if (amountOut <= 0n) return 0n
+  const bps = Math.min(Math.max(slippageBps, 0), 10000)
+  return (amountOut * BigInt(10000 - bps)) / 10000n
 }
 
 /**
@@ -42,6 +52,7 @@ export function useSwapQuote({
   fromToken,
   toToken,
   amountIn,
+  slippageBps,
   chainId,
   enabled = true,
 }: UseSwapQuoteParams): UseSwapQuoteResult {
@@ -127,7 +138,7 @@ export function useSwapQuote({
 
         return {
           amountOutFormatted,
-          rawAmountOut: amountOut,
+          amountOutWei: amountOut,
         }
       } catch (err: any) {
         // 处理常见的链上错误
@@ -165,9 +176,18 @@ export function useSwapQuote({
     refetchInterval: 30_000,
   })
 
+  const amountOutMinWei = query.data?.amountOutWei
+    ? applySlippage(query.data.amountOutWei, slippageBps)
+    : undefined
+
+  const amountOutMinFormatted =
+    amountOutMinWei && toToken ? formatUnits(amountOutMinWei, toToken.decimals) : ""
+
   return {
     amountOutFormatted: query.data?.amountOutFormatted || "",
-    rawAmountOut: query.data?.rawAmountOut,
+    amountOutWei: query.data?.amountOutWei,
+    amountOutMinWei,
+    amountOutMinFormatted,
     isLoading: query.isLoading,
     isFetching: query.isFetching,
     error: query.error as Error | null,

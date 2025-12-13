@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo, useCallback } from "react"
+import { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { useChainId, useSwitchChain } from "wagmi"
 import { AppPanel } from "@/components/app/app-panel"
 import { SwapHeader } from "./SwapHeader"
@@ -10,6 +10,7 @@ import { SwapFooter } from "./SwapFooter"
 import { SwapActionButton } from "./SwapActionButton"
 import { TokenSelectDialog } from "./TokenSelectDialog"
 import { SwapSettingsDialog } from "./SwapSettingsDialog"
+import { RecentSwaps } from "./RecentSwaps"
 import { useTokenBalances } from "@/lib/hooks/useTokenBalances"
 import { getTokensByChainId } from "@/config/tokens"
 import { getDexChainConfig, PREFERRED_CHAIN_ID, SUPPORTED_CHAIN_IDS } from "@/config/chains"
@@ -26,6 +27,12 @@ import {
   type SwapReviewParams,
   type Token,
 } from "@/features/swap/engine"
+import {
+  type RecentSwap,
+  addRecentSwap,
+  getRecentSwapsForAccount,
+  updateRecentSwapStatus,
+} from "@/features/swap/recentSwaps"
 import type { TokenConfig } from "@/config/tokens"
 
 export interface SwapCardProps {
@@ -118,6 +125,7 @@ export function SwapCard({
     chainId,
     address,
     reviewParams,
+    priceImpactPercent,
     setFromToken,
     setToToken,
     setFromAmount,
@@ -204,6 +212,21 @@ export function SwapCard({
     chainId,
   })
 
+  const [recentSwaps, setRecentSwaps] = useState<RecentSwap[]>([])
+  const pendingSwapIdRef = useRef<string | null>(null)
+
+  const refreshRecentSwaps = useCallback(() => {
+    if (!chainId) {
+      setRecentSwaps([])
+      return
+    }
+    setRecentSwaps(getRecentSwapsForAccount(chainId, address))
+  }, [address, chainId])
+
+  useEffect(() => {
+    refreshRecentSwaps()
+  }, [refreshRecentSwaps])
+
   const fromBalanceWei = useMemo(() => {
     if (!fromToken) return undefined
     const balanceStr = balances[fromToken.address]
@@ -220,6 +243,22 @@ export function SwapCard({
       // 保持输入值，让用户看到结果
     }
   }, [swapSuccess])
+
+  useEffect(() => {
+    const pendingId = pendingSwapIdRef.current
+    if (!pendingId) return
+
+    if (swapStatus === "pending" && swapTxHash) {
+      updateRecentSwapStatus(pendingId, "pending", swapTxHash)
+      refreshRecentSwaps()
+    }
+
+    if (swapStatus === "success" || swapStatus === "error") {
+      updateRecentSwapStatus(pendingId, swapStatus, swapTxHash)
+      refreshRecentSwaps()
+      pendingSwapIdRef.current = null
+    }
+  }, [refreshRecentSwaps, swapStatus, swapTxHash])
 
   const explorerUrl = useMemo(() => {
     if (swapSuccess && swapTxHash && chainId) {
@@ -299,6 +338,35 @@ export function SwapCard({
     console.log("Swap Review Params:", reviewParams)
     onReview?.(reviewParams)
   }, [onReview, reviewParams])
+
+  const handleSwap = useCallback(async () => {
+    if (!reviewParams || !address || !chainId) {
+      await swap()
+      return
+    }
+
+    const id = `${chainId}-${Date.now()}-${reviewParams.fromToken.symbol}-${reviewParams.toToken.symbol}`
+    pendingSwapIdRef.current = id
+    addRecentSwap({
+      id,
+      chainId,
+      account: address,
+      timestamp: Date.now(),
+      txHash: undefined,
+      fromTokenSymbol: reviewParams.fromToken.symbol,
+      toTokenSymbol: reviewParams.toToken.symbol,
+      fromAmount: reviewParams.humanAmountIn,
+      toAmount: reviewParams.humanAmountOut,
+      status: "pending",
+    })
+    refreshRecentSwaps()
+
+    try {
+      await swap()
+    } catch (err) {
+      console.error("Swap failed:", err)
+    }
+  }, [address, chainId, refreshRecentSwaps, reviewParams, swap])
 
   const primaryAction = useMemo(() => {
     if (!isConnected) {
@@ -397,15 +465,7 @@ export function SwapCard({
       label: "Swap",
       disabled: false,
       loading: false,
-      onClick: fromTokenConfig?.isNative
-        ? handleReview
-        : async () => {
-          try {
-            await swap()
-          } catch (err) {
-            console.error("Swap failed:", err)
-          }
-        },
+      onClick: fromTokenConfig?.isNative ? handleReview : handleSwap,
       type: "swap" as const,
     }
   }, [
@@ -420,8 +480,8 @@ export function SwapCard({
     isSupportedChain,
     isSwitchingChain,
     recommendedChain,
+    handleSwap,
     switchChain,
-    swap,
     allowanceLoading,
   ])
 
@@ -488,10 +548,11 @@ export function SwapCard({
           />
 
           <SwapFooter
-            fromToken={fromToken}
             toToken={toToken}
             rateText={getRateText()}
             slippageBps={slippageBps}
+            reviewParams={reviewParams}
+            priceImpactPercent={priceImpactPercent}
             isLoadingQuote={currentError.code === "QUOTE_LOADING"}
             quoteError={currentError.code === "QUOTE_FAILED" ? currentError.shortMessage : undefined}
           />
@@ -523,6 +584,14 @@ export function SwapCard({
           )}
         </div>
       </AppPanel>
+
+      <div className="mt-4">
+        <RecentSwaps
+          items={recentSwaps.slice(0, 8)}
+          chainId={chainId}
+          explorerBaseUrl={dexChainConfig?.explorerBaseUrl}
+        />
+      </div>
 
       <TokenSelectDialog
         open={tokenDialogOpen}

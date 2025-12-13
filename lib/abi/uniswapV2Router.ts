@@ -9,5 +9,6 @@ export const uniswapV2RouterAbi = parseAbi([
   'function getAmountsOut(uint256 amountIn, address[] calldata path) external view returns (uint256[] memory amounts)',
   // Swap 函数 - ERC20 → ERC20
   'function swapExactTokensForTokens(uint256 amountIn, uint256 amountOutMin, address[] calldata path, address to, uint256 deadline) external returns (uint256[] memory amounts)',
+  // 工厂地址
+  'function factory() external pure returns (address)',
 ])
-
