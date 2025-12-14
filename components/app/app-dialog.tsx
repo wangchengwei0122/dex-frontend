@@ -20,6 +20,7 @@ export const AppDialogHeader = DialogHeader
 export const AppDialogTitle = DialogTitle
 export const AppDialogDescription = DialogDescription
 export const AppDialogFooter = DialogFooter
+export const AppDialogClose = DialogClose
 
 type DialogContentBaseProps = React.ComponentProps<typeof DialogContent>
 

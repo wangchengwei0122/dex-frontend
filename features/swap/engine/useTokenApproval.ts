@@ -61,7 +61,7 @@ export function useTokenApproval({
     abi: erc20Abi,
     functionName: "approve",
     args: spender ? [spender, maxUint256] : undefined,
-    chainId,
+    chainId: chainId as any,
     query: {
       enabled: Boolean(token && !isNativeToken && spender && owner),
     },
@@ -85,7 +85,7 @@ export function useTokenApproval({
     error: receiptError,
   } = useWaitForTransactionReceipt({
     hash,
-    chainId,
+    chainId: chainId as any,
   })
 
   const derivedError = useMemo(() => {

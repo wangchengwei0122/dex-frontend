@@ -39,9 +39,9 @@ export interface UseSwapQuoteResult {
 }
 
 function applySlippage(amountOut: bigint, slippageBps: number): bigint {
-  if (amountOut <= 0n) return 0n
+  if (amountOut <= BigInt(0)) return BigInt(0)
   const bps = Math.min(Math.max(slippageBps, 0), 10000)
-  return (amountOut * BigInt(10000 - bps)) / 10000n
+  return (amountOut * BigInt(10000 - bps)) / BigInt(10000)
 }
 
 /**
@@ -129,7 +129,7 @@ export function useSwapQuote({
         // amounts 是一个数组，amounts[0] 是输入金额，amounts[1] 是输出金额
         const amountOut = amounts[1]
 
-        if (!amountOut || amountOut === 0n) {
+        if (!amountOut || amountOut === BigInt(0)) {
           throw new Error("无法获取报价，可能池子流动性不足")
         }
 

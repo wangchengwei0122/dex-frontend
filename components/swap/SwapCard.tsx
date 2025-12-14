@@ -38,6 +38,7 @@ import type { RecentSwap } from "@/features/swap/recentSwaps"
 
 const EMPTY_RECENT_SWAPS: RecentSwap[] = []
 import type { TokenConfig } from "@/config/tokens"
+type SupportedChainId = (typeof SUPPORTED_CHAIN_IDS)[number]
 
 export interface SwapCardProps {
   tokens?: Token[]
@@ -77,17 +78,17 @@ export function SwapCard({
   })
 
   const defaultFromToken = useMemo(() => {
-    if (!tokens.length) return null
+    if (!tokens.length) return undefined
     return (
       tokens.find((t) => t.symbol === defaultFromSymbol && t.chainId === chainIdFromWagmi) ||
       tokens.find((t) => t.isNative) ||
       tokens[0] ||
-      null
+      undefined
     )
   }, [tokens, defaultFromSymbol, chainIdFromWagmi])
 
   const defaultToToken = useMemo(() => {
-    if (!tokens.length) return null
+    if (!tokens.length) return undefined
 
     const toBySymbol = tokens.find(
       (t) => t.symbol === defaultToSymbol && t.address !== defaultFromToken?.address
@@ -97,7 +98,7 @@ export function SwapCard({
     const stable =
       tokens.find((t) => t.isStable && t.address !== defaultFromToken?.address) ||
       tokens.find((t) => t.address !== defaultFromToken?.address)
-    return stable || null
+    return stable || undefined
   }, [tokens, defaultToSymbol, defaultFromToken])
 
   const getBalanceLabel = useCallback(
@@ -372,13 +373,15 @@ export function SwapCard({
     actionLabel = "Connect Wallet"
     actionHandler = () => {}
   } else if (!isSupportedChain) {
-    const targetChainId = recommendedChain?.chainId ?? SUPPORTED_CHAIN_IDS[0]
+    const targetChainId = (recommendedChain?.chainId ?? SUPPORTED_CHAIN_IDS[0]) as SupportedChainId
     actionLabel = recommendedChain ? `Switch to ${recommendedChain.name}` : "Switch network"
     actionDisabled = !switchChain
     actionLoading = isSwitchingChain
     actionHandler = () => {
       if (switchChain) {
-        switchChain({ chainId: targetChainId })
+        switchChain({
+          chainId: targetChainId as Parameters<typeof switchChain>[0]["chainId"],
+        })
       }
     }
   } else if (approvePending) {

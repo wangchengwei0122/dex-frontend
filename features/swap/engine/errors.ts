@@ -171,7 +171,7 @@ export function deriveSwapError(params: DeriveSwapErrorParams): SwapError {
     Number.isNaN(Number(amountStr)) ||
     Number(amountStr) <= 0 ||
     amountInWei === undefined ||
-    amountInWei <= 0n
+    amountInWei <= BigInt(0)
   if (hasInvalidAmount) {
     return createSwapError("INVALID_AMOUNT")
   }
@@ -198,7 +198,7 @@ export function deriveSwapError(params: DeriveSwapErrorParams): SwapError {
     !allowanceLoading &&
     allowance !== undefined &&
     amountInWei !== undefined &&
-    amountInWei > 0n
+    amountInWei > BigInt(0)
   if (needAllowanceCheck && allowance < amountInWei) {
     return createSwapError("INSUFFICIENT_ALLOWANCE")
   }

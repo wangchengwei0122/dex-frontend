@@ -120,8 +120,8 @@ export function useSwap({
     toToken &&
     !fromToken.isNative &&
     !toToken.isNative &&
-    amountInWei > 0n &&
-    amountOutMinWei > 0n &&
+    amountInWei > BigInt(0) &&
+    amountOutMinWei > BigInt(0) &&
     recipient &&
     routerAddress &&
     path &&
@@ -136,7 +136,7 @@ export function useSwap({
     args: path && recipient
       ? [amountInWei, amountOutMinWei, path, recipient, BigInt(deadline)]
       : undefined,
-    chainId,
+    chainId: chainId as any,
     query: {
       enabled: shouldEnable,
     },
@@ -160,7 +160,7 @@ export function useSwap({
     error: receiptError,
   } = useWaitForTransactionReceipt({
     hash,
-    chainId,
+    chainId: chainId as any,
   })
 
   // 更新交易哈希
@@ -228,8 +228,8 @@ export function useSwap({
       !toToken ||
       fromToken.isNative ||
       toToken.isNative ||
-      amountInWei <= 0n ||
-      amountOutMinWei <= 0n ||
+      amountInWei <= BigInt(0) ||
+      amountOutMinWei <= BigInt(0) ||
       !recipient ||
       !routerAddress ||
       !path ||

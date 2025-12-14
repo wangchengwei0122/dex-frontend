@@ -5,10 +5,10 @@ export function calcPriceImpact(
   reserveOut: bigint
 ): number {
   if (
-    amountIn <= 0n ||
-    amountOut <= 0n ||
-    reserveIn <= 0n ||
-    reserveOut <= 0n ||
+    amountIn <= BigInt(0) ||
+    amountOut <= BigInt(0) ||
+    reserveIn <= BigInt(0) ||
+    reserveOut <= BigInt(0) ||
     reserveOut <= amountOut
   ) {
     return 0

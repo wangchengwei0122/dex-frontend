@@ -88,8 +88,15 @@ interface TokenBubbleProps {
   bubble: Bubble
 }
 
+type BubbleStyle = CSSProperties & {
+  "--move-x"?: string
+  "--move-y"?: string
+  "--rotate-from"?: string
+  "--rotate-to"?: string
+}
+
 function TokenBubble({ bubble }: TokenBubbleProps) {
-  const style: CSSProperties = {
+  const style: BubbleStyle = {
     width: bubble.size,
     height: bubble.size,
     left: `${bubble.x}%`,

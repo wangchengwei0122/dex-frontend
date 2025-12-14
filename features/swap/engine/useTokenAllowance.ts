@@ -50,7 +50,7 @@ export function useTokenAllowance({
   chainId,
   enabled = true,
 }: UseTokenAllowanceParams): UseTokenAllowanceResult {
-  const publicClient = usePublicClient({ chainId })
+  const publicClient = usePublicClient({ chainId: chainId as any })
 
   const isNativeToken = token?.isNative || token?.address === 'native'
 
@@ -108,7 +108,7 @@ export function useTokenAllowance({
     // 原生币返回最大额度（表示不需要 approve）
     const allowance = token?.isNative
       ? BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff')
-      : 0n
+      : BigInt(0)
 
     return {
       allowance,
@@ -122,7 +122,7 @@ export function useTokenAllowance({
   }
 
   return {
-    allowance: query.data?.allowance ?? 0n,
+    allowance: query.data?.allowance ?? BigInt(0),
     isLoading: query.isLoading,
     isFetching: query.isFetching,
     error: query.error as Error | null,

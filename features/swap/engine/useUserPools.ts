@@ -39,7 +39,7 @@ function formatTokenAmount(value: bigint, token: TokenConfig): string {
 }
 
 export function useUserPools({ chainId, account }: UseUserPoolsParams): UseUserPoolsResult {
-  const publicClient = usePublicClient({ chainId })
+  const publicClient = usePublicClient({ chainId: chainId as any })
   const dexChainConfig = getDexChainConfig(chainId)
 
   const pools = useMemo(() => (chainId ? getPoolsByChainId(chainId) : []), [chainId])
@@ -67,10 +67,11 @@ export function useUserPools({ chainId, account }: UseUserPoolsParams): UseUserP
         { address: pool.pairAddress, abi: uniswapV2PairAbi, functionName: "token1" } as const,
       ])
 
-      const { results = [] } = await publicClient.multicall({
+      const multicallResult = (await publicClient.multicall({
         allowFailure: true,
         contracts,
-      })
+      })) as any
+      const results = multicallResult?.results ?? multicallResult ?? []
 
       const positions: UserPoolPosition[] = []
 
@@ -94,7 +95,7 @@ export function useUserPools({ chainId, account }: UseUserPoolsParams): UseUserP
         const lpTotalSupply = totalSupplyResult.result as bigint
         const lpBalance = balanceResult.result as bigint
 
-        if (lpBalance === 0n || lpTotalSupply === 0n) {
+        if (lpBalance === BigInt(0) || lpTotalSupply === BigInt(0)) {
           continue
         }
 
@@ -133,7 +134,7 @@ export function useUserPools({ chainId, account }: UseUserPoolsParams): UseUserP
         const pooledToken0Raw = (reserve0 * lpBalance) / lpTotalSupply
         const pooledToken1Raw = (reserve1 * lpBalance) / lpTotalSupply
 
-        const shareScaled = (lpBalance * 1_000_000_000n) / lpTotalSupply
+        const shareScaled = (lpBalance * BigInt(1_000_000_000)) / lpTotalSupply
         const sharePercent = Number(shareScaled) / 10_000_000
 
         positions.push({

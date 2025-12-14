@@ -80,3 +80,4 @@ const AppNavbar = React.forwardRef<HTMLElement, AppNavbarProps>(({ className, ..
 AppNavbar.displayName = "AppNavbar"
 
 export { AppNavbar }
+export type { AppNavbarProps }

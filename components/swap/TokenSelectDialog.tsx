@@ -80,7 +80,9 @@ export function TokenSelectDialog({
               ) : (
                 filteredTokens.map((token) => {
                   const isSelected = selectedToken?.address === token.address;
-                  const isBlocked = otherSideToken && otherSideToken.address === token.address;
+                  const isBlocked = Boolean(
+                    otherSideToken && otherSideToken.address === token.address
+                  );
 
                   return (
                     <button

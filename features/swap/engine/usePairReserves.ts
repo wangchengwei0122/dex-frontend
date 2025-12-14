@@ -50,7 +50,7 @@ export function usePairReserves(params: UsePairReservesParams): UsePairReservesR
     address: routerAddress,
     abi: uniswapV2RouterAbi,
     functionName: "factory",
-    chainId,
+    chainId: chainId as any,
     query: {
       enabled: canQuery,
     },
@@ -67,7 +67,7 @@ export function usePairReserves(params: UsePairReservesParams): UsePairReservesR
     abi: uniswapV2FactoryAbi,
     functionName: "getPair",
     args: normalizedFrom && normalizedTo ? [normalizedFrom, normalizedTo] : undefined,
-    chainId,
+    chainId: chainId as any,
     query: {
       enabled: Boolean(hasFactory && normalizedFrom && normalizedTo),
     },
@@ -84,7 +84,7 @@ export function usePairReserves(params: UsePairReservesParams): UsePairReservesR
     address: hasPair ? pair : undefined,
     abi: uniswapV2PairAbi,
     functionName: "token0",
-    chainId,
+    chainId: chainId as any,
     query: {
       enabled: Boolean(hasPair),
     },
@@ -98,7 +98,7 @@ export function usePairReserves(params: UsePairReservesParams): UsePairReservesR
     address: hasPair ? pair : undefined,
     abi: uniswapV2PairAbi,
     functionName: "token1",
-    chainId,
+    chainId: chainId as any,
     query: {
       enabled: Boolean(hasPair),
     },
@@ -112,7 +112,7 @@ export function usePairReserves(params: UsePairReservesParams): UsePairReservesR
     address: hasPair ? pair : undefined,
     abi: uniswapV2PairAbi,
     functionName: "getReserves",
-    chainId,
+    chainId: chainId as any,
     query: {
       enabled: Boolean(hasPair),
     },
@@ -143,4 +143,3 @@ export function usePairReserves(params: UsePairReservesParams): UsePairReservesR
     error: error ? (error as Error) : null,
   }
 }
-
