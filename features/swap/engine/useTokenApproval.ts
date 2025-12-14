@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useMemo } from "react"
 import { useWriteContract, useWaitForTransactionReceipt, useSimulateContract } from "wagmi"
 import { erc20Abi, maxUint256, type Address } from "viem"
 import type { TokenConfig } from "@/config/tokens"
@@ -52,8 +52,7 @@ export function useTokenApproval({
   spender,
   chainId,
 }: UseTokenApprovalParams): UseTokenApprovalResult {
-  const [error, setError] = useState<Error | null>(null)
-  const [txHash, setTxHash] = useState<`0x${string}` | undefined>()
+  const [manualError, setManualError] = useState<Error | null>(null)
   const isNativeToken = token?.isNative || token?.address === 'native'
 
   // 模拟合约调用
@@ -64,7 +63,7 @@ export function useTokenApproval({
     args: spender ? [spender, maxUint256] : undefined,
     chainId,
     query: {
-      enabled: Boolean(token && !isNativeToken && spender),
+      enabled: Boolean(token && !isNativeToken && spender && owner),
     },
   })
 
@@ -89,50 +88,45 @@ export function useTokenApproval({
     chainId,
   })
 
-  // 更新交易哈希
-  useEffect(() => {
-    if (hash) {
-      setTxHash(hash)
-      setError(null) // 清除之前的错误
-    }
-  }, [hash])
-
-  // 更新错误状态
-  useEffect(() => {
+  const derivedError = useMemo(() => {
     if (isWriteError && writeError) {
       const errorMessage = writeError.message || "交易失败"
-      // 处理用户拒绝交易的情况
       if (
         errorMessage.includes("User rejected") ||
         errorMessage.includes("user rejected") ||
         errorMessage.includes("rejected") ||
         errorMessage.includes("denied")
       ) {
-        setError(new Error("用户拒绝了交易"))
-      } else {
-        setError(new Error(errorMessage))
+        return new Error("用户拒绝了交易")
       }
-    } else if (isReceiptError && receiptError) {
-      setError(new Error(receiptError.message || "交易确认失败"))
-    } else if (isReceiptSuccess) {
-      setError(null) // 成功时清除错误
+      return new Error(errorMessage)
     }
-  }, [isWriteError, writeError, isReceiptError, receiptError, isReceiptSuccess])
+
+    if (isReceiptError && receiptError) {
+      return new Error(receiptError.message || "交易确认失败")
+    }
+
+    if (isReceiptSuccess) {
+      return null
+    }
+
+    return manualError
+  }, [isWriteError, writeError, isReceiptError, receiptError, isReceiptSuccess, manualError])
 
   // 执行 approve 操作
   const approveMax = async (): Promise<void> => {
     // 前置校验
-    if (!token || isNativeToken || !spender) {
+    if (!token || isNativeToken || !spender || !owner) {
       return
     }
 
     // 重置状态
-    setError(null)
+    setManualError(null)
     resetWrite()
 
     // 检查是否有模拟数据
     if (!simulateData?.request) {
-      setError(new Error("无法准备交易，请检查网络连接"))
+      setManualError(new Error("无法准备交易，请检查网络连接"))
       return
     }
 
@@ -141,18 +135,19 @@ export function useTokenApproval({
       writeContract(simulateData.request)
       // 注意：writeContract 本身不会抛出异常，错误会通过 isWriteError 和 writeError 来处理
       // 如果用户拒绝交易，错误会在 useEffect 中被处理
-    } catch (err: any) {
+    } catch (err: unknown) {
       // 捕获同步错误（虽然 writeContract 通常不会抛出）
-      const errorMessage = err.message || "Approve 失败"
+      const message = err instanceof Error ? err.message : "Approve 失败"
+      const errorMessage = message || "Approve 失败"
       if (
         errorMessage.includes("User rejected") ||
         errorMessage.includes("user rejected") ||
         errorMessage.includes("rejected") ||
         errorMessage.includes("denied")
       ) {
-        setError(new Error("用户拒绝了交易"))
+        setManualError(new Error("用户拒绝了交易"))
       } else {
-        setError(new Error(errorMessage))
+        setManualError(new Error(errorMessage))
       }
     }
   }
@@ -166,7 +161,7 @@ export function useTokenApproval({
     isPending,
     isSuccess,
     isError,
-    error,
-    txHash,
+    error: derivedError,
+    txHash: hash,
   }
 }

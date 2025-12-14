@@ -254,9 +254,9 @@ export function useSwap({
       // 发送交易（writeContract 是同步的，但会触发钱包弹窗）
       writeContract(simulateData.request)
       // 注意：writeContract 本身不会抛出异常，错误会通过 isWriteError 和 writeError 来处理
-    } catch (err: any) {
+    } catch (err: unknown) {
       // 捕获同步错误（虽然 writeContract 通常不会抛出）
-      const errorMessage = err.message || 'Swap 失败'
+      const errorMessage = err instanceof Error ? err.message || 'Swap 失败' : 'Swap 失败'
       if (
         errorMessage.includes('User rejected') ||
         errorMessage.includes('user rejected') ||

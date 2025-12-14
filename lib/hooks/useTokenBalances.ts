@@ -71,7 +71,7 @@ export function useTokenBalances({ tokens }: UseTokenBalancesParams): TokenBalan
           balanceMap[token.address] = displayValue
 
           return { address: token.address, balance: displayValue }
-        } catch (error) {
+        } catch {
           // 查询失败时返回 0
           balanceMap[token.address] = '0'
           return { address: token.address, balance: '0' }

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { useConnection, useChainId } from "wagmi"
 import { parseUnits, type Address } from "viem"
 import { useSwapQuote } from "./useSwapQuote"
@@ -30,7 +30,6 @@ export interface UseSwapFormResult {
   setFromToken: (token: TokenConfig | null) => void
   setToToken: (token: TokenConfig | null) => void
   setFromAmount: (value: string) => void
-  setToAmount: (value: string) => void
   switchTokens: () => void
   setSlippageBps: (value: number) => void
   setDeadlineMinutes: (value: number) => void
@@ -52,11 +51,11 @@ export function useSwapForm(params?: UseSwapFormParams): UseSwapFormResult {
   const { address, isConnected } = useConnection()
   const dexChainConfig = getDexChainConfig(chainId)
   const isSupportedChain = Boolean(dexChainConfig)
+  const chainKey = chainId ?? 0
 
-  const [fromToken, setFromToken] = useState<TokenConfig | null>(() => defaultFromToken || null)
-  const [toToken, setToToken] = useState<TokenConfig | null>(() => defaultToToken || null)
-  const [fromAmount, setFromAmount] = useState("")
-  const [toAmount, setToAmount] = useState("")
+  const [fromTokenMap, setFromTokenMap] = useState<Record<number, TokenConfig | null>>({})
+  const [toTokenMap, setToTokenMap] = useState<Record<number, TokenConfig | null>>({})
+  const [fromAmountMap, setFromAmountMap] = useState<Record<number, string>>({})
   const [settings, setSettings] = useState<SwapSettings>({
     slippageBps: 30,
     deadlineMinutes: 30,
@@ -68,25 +67,14 @@ export function useSwapForm(params?: UseSwapFormParams): UseSwapFormResult {
     [chainId, tokens]
   )
 
-  const previousChainId = useRef<number | undefined>(chainId)
-
-  useEffect(() => {
-    const chainChanged = previousChainId.current !== chainId
-    previousChainId.current = chainId
-
+  const defaultSelection = useMemo(() => {
     if (chainScopedTokens.length === 0) {
-      setFromToken(null)
-      setToToken(null)
-      if (chainChanged) {
-        setFromAmount("")
-        setToAmount("")
-      }
-      return
+      return { from: null as TokenConfig | null, to: null as TokenConfig | null }
     }
 
     const preferredFrom =
       defaultFromToken && defaultFromToken.chainId === chainId ? defaultFromToken : null
-    const nextFrom =
+    const fromCandidate =
       preferredFrom ||
       chainScopedTokens.find((token) => token.isNative) ||
       chainScopedTokens[0] ||
@@ -94,21 +82,65 @@ export function useSwapForm(params?: UseSwapFormParams): UseSwapFormResult {
 
     const preferredTo =
       defaultToToken && defaultToToken.chainId === chainId ? defaultToToken : null
-    const nextTo =
-      (preferredTo && preferredTo.address !== nextFrom?.address ? preferredTo : null) ||
-      chainScopedTokens.find((token) => token.isStable && token.address !== nextFrom?.address) ||
-      chainScopedTokens.find((token) => token.address !== nextFrom?.address) ||
-      nextFrom ||
+    const toCandidate =
+      (preferredTo && preferredTo.address !== fromCandidate?.address ? preferredTo : null) ||
+      chainScopedTokens.find((token) => token.isStable && token.address !== fromCandidate?.address) ||
+      chainScopedTokens.find((token) => token.address !== fromCandidate?.address) ||
+      fromCandidate ||
       null
 
-    setFromToken(nextFrom)
-    setToToken(nextTo)
-
-    if (chainChanged) {
-      setFromAmount("")
-      setToAmount("")
-    }
+    return { from: fromCandidate, to: toCandidate }
   }, [chainId, chainScopedTokens, defaultFromToken, defaultToToken])
+
+  const isTokenAvailable = useCallback(
+    (token?: TokenConfig | null) =>
+      Boolean(
+        token &&
+        chainScopedTokens.some(
+          (candidate) => candidate.address === token.address && candidate.chainId === chainId
+        )
+      ),
+    [chainId, chainScopedTokens]
+  )
+
+  const fromToken = useMemo(() => {
+    const candidate = fromTokenMap[chainKey]
+    if (isTokenAvailable(candidate)) {
+      return candidate
+    }
+    return defaultSelection.from
+  }, [chainKey, defaultSelection.from, fromTokenMap, isTokenAvailable])
+
+  const toToken = useMemo(() => {
+    const candidate = toTokenMap[chainKey]
+    const validCandidate = isTokenAvailable(candidate) ? candidate : null
+
+    if (validCandidate && validCandidate.address !== fromToken?.address) {
+      return validCandidate
+    }
+
+    if (defaultSelection.to && defaultSelection.to.address !== fromToken?.address) {
+      return defaultSelection.to
+    }
+
+    const alternate =
+      chainScopedTokens.find((token) => token.address !== fromToken?.address && token.chainId === chainId) || null
+    return alternate
+  }, [chainId, chainScopedTokens, chainKey, defaultSelection.to, fromToken, isTokenAvailable, toTokenMap])
+
+  const fromAmount = fromAmountMap[chainKey] ?? ""
+
+  const setFromToken = (token: TokenConfig | null) => {
+    setFromTokenMap((prev) => ({ ...prev, [chainKey]: token }))
+  }
+
+  const setToToken = (token: TokenConfig | null) => {
+    setToTokenMap((prev) => ({ ...prev, [chainKey]: token }))
+  }
+
+  const setFromAmount = (value: string) => {
+    setFromAmountMap((prev) => ({ ...prev, [chainKey]: value }))
+  }
 
   const {
     amountOutFormatted,
@@ -127,20 +159,17 @@ export function useSwapForm(params?: UseSwapFormParams): UseSwapFormResult {
     enabled: isConnected && isSupportedChain,
   })
 
-  useEffect(() => {
+  const toAmount = useMemo(() => {
     if (quoteError) {
-      setToAmount("")
-      return
+      return ""
     }
-
     if (amountOutFormatted) {
-      setToAmount(amountOutFormatted)
-      return
+      return amountOutFormatted
     }
-
     if (!fromAmount || !fromToken || !toToken) {
-      setToAmount("")
+      return ""
     }
+    return ""
   }, [amountOutFormatted, fromAmount, fromToken, quoteError, toToken])
 
   const amountInParsed = useMemo(() => {
@@ -180,12 +209,13 @@ export function useSwapForm(params?: UseSwapFormParams): UseSwapFormResult {
       !amountOutMinWei ||
       !chainId ||
       !address ||
-      !toAmount
+      !toAmount ||
+      !isSupportedChain
     ) {
       return null
     }
 
-    const deadline = Math.floor(Date.now() / 1000) + settings.deadlineMinutes * 60
+    const deadline = settings.deadlineMinutes * 60
     const fromAddress = (fromToken.isNative ? fromToken.wrappedAddress : fromToken.address) as
       | Address
       | undefined
@@ -222,6 +252,7 @@ export function useSwapForm(params?: UseSwapFormParams): UseSwapFormResult {
     fromToken,
     settings.deadlineMinutes,
     settings.slippageBps,
+    isSupportedChain,
     toAmount,
     toToken,
   ])
@@ -248,7 +279,7 @@ export function useSwapForm(params?: UseSwapFormParams): UseSwapFormResult {
     }
 
     return { isValid: true, validationError: undefined }
-  }, [address, fromAmount, fromToken, isConnected, quoteError, toToken])
+  }, [address, fromAmount, fromToken, isConnected, isSupportedChain, quoteError, toToken])
 
   const setSlippageBps = (value: number) => {
     setSettings((prev) => ({ ...prev, slippageBps: value }))
@@ -262,7 +293,6 @@ export function useSwapForm(params?: UseSwapFormParams): UseSwapFormResult {
     setFromToken(toToken)
     setToToken(fromToken)
     setFromAmount("")
-    setToAmount("")
   }
 
   return {
@@ -279,7 +309,6 @@ export function useSwapForm(params?: UseSwapFormParams): UseSwapFormResult {
     setFromToken,
     setToToken,
     setFromAmount,
-    setToAmount,
     switchTokens,
     setSlippageBps,
     setDeadlineMinutes,

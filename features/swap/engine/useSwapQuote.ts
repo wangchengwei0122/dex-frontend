@@ -113,7 +113,7 @@ export function useSwapQuote({
       let amountInWei: bigint
       try {
         amountInWei = parseUnits(debouncedAmountIn, fromToken.decimals)
-      } catch (err) {
+      } catch {
         throw new Error("金额格式错误")
       }
 
@@ -140,23 +140,24 @@ export function useSwapQuote({
           amountOutFormatted,
           amountOutWei: amountOut,
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         // 处理常见的链上错误
-        if (err.message?.includes("INSUFFICIENT_LIQUIDITY")) {
+        if (err instanceof Error && err.message?.includes("INSUFFICIENT_LIQUIDITY")) {
           throw new Error("池子流动性不足，无法报价")
         }
-        if (err.message?.includes("INSUFFICIENT_INPUT_AMOUNT")) {
+        if (err instanceof Error && err.message?.includes("INSUFFICIENT_INPUT_AMOUNT")) {
           throw new Error("输入金额过小")
         }
-        if (err.message?.includes("INSUFFICIENT_OUTPUT_AMOUNT")) {
+        if (err instanceof Error && err.message?.includes("INSUFFICIENT_OUTPUT_AMOUNT")) {
           throw new Error("输出金额过小")
         }
-        if (err.message?.includes("execution reverted")) {
+        if (err instanceof Error && err.message?.includes("execution reverted")) {
           throw new Error("交易对不存在或流动性不足")
         }
 
         // 其他错误
-        throw new Error(err.message || "获取报价失败")
+        const fallbackMessage = err instanceof Error ? err.message : "获取报价失败"
+        throw new Error(fallbackMessage || "获取报价失败")
       }
     },
     enabled:

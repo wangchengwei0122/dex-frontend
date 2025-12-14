@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo, useCallback, useRef } from "react"
+import { useState, useEffect, useMemo, useCallback, useRef, useSyncExternalStore } from "react"
 import { useChainId, useSwitchChain } from "wagmi"
 import { AppPanel } from "@/components/app/app-panel"
 import { SwapHeader } from "./SwapHeader"
@@ -28,11 +28,15 @@ import {
   type Token,
 } from "@/features/swap/engine"
 import {
-  type RecentSwap,
   addRecentSwap,
-  getRecentSwapsForAccount,
+  getAllRecentSwapsSnapshot,
   updateRecentSwapStatus,
+  subscribeRecentSwaps,
 } from "@/features/swap/recentSwaps"
+
+import type { RecentSwap } from "@/features/swap/recentSwaps"
+
+const EMPTY_RECENT_SWAPS: RecentSwap[] = []
 import type { TokenConfig } from "@/config/tokens"
 
 export interface SwapCardProps {
@@ -64,9 +68,7 @@ export function SwapCard({
   )
   const supportedNetworkLabel = useMemo(
     () =>
-      SUPPORTED_CHAIN_IDS.map(
-        (id) => getDexChainConfig(id)?.name || `Chain ${id}`
-      ).join(" or "),
+      SUPPORTED_CHAIN_IDS.map((id) => getDexChainConfig(id)?.name || `Chain ${id}`).join(" or "),
     []
   )
 
@@ -129,10 +131,7 @@ export function SwapCard({
     setFromToken,
     setToToken,
     setFromAmount,
-    setToAmount,
     switchTokens,
-    setSlippageBps,
-    setDeadlineMinutes,
     isConnected,
     isLoadingQuote,
     isFetchingQuote,
@@ -159,7 +158,9 @@ export function SwapCard({
     owner: address,
     spender: routerAddress,
     chainId,
-    enabled: Boolean(fromTokenConfig && address && routerAddress && isConnected && isSupportedChain),
+    enabled: Boolean(
+      fromTokenConfig && address && routerAddress && isConnected && isSupportedChain
+    ),
   })
 
   const {
@@ -212,20 +213,19 @@ export function SwapCard({
     chainId,
   })
 
-  const [recentSwaps, setRecentSwaps] = useState<RecentSwap[]>([])
   const pendingSwapIdRef = useRef<string | null>(null)
+  const allRecentSwaps = useSyncExternalStore(
+    subscribeRecentSwaps,
+    getAllRecentSwapsSnapshot,
+    () => EMPTY_RECENT_SWAPS
+  )
 
-  const refreshRecentSwaps = useCallback(() => {
-    if (!chainId) {
-      setRecentSwaps([])
-      return
-    }
-    setRecentSwaps(getRecentSwapsForAccount(chainId, address))
-  }, [address, chainId])
-
-  useEffect(() => {
-    refreshRecentSwaps()
-  }, [refreshRecentSwaps])
+  const recentSwaps = useMemo(() => {
+    if (!chainId) return EMPTY_RECENT_SWAPS
+    return allRecentSwaps.filter((item) =>
+      address ? item.chainId === chainId && item.account === address : item.chainId === chainId
+    )
+  }, [address, chainId, allRecentSwaps])
 
   const fromBalanceWei = useMemo(() => {
     if (!fromToken) return undefined
@@ -250,15 +250,13 @@ export function SwapCard({
 
     if (swapStatus === "pending" && swapTxHash) {
       updateRecentSwapStatus(pendingId, "pending", swapTxHash)
-      refreshRecentSwaps()
     }
 
     if (swapStatus === "success" || swapStatus === "error") {
       updateRecentSwapStatus(pendingId, swapStatus, swapTxHash)
-      refreshRecentSwaps()
       pendingSwapIdRef.current = null
     }
-  }, [refreshRecentSwaps, swapStatus, swapTxHash])
+  }, [swapStatus, swapTxHash])
 
   const explorerUrl = useMemo(() => {
     if (swapSuccess && swapTxHash && chainId) {
@@ -276,7 +274,6 @@ export function SwapCard({
       fromToken: fromTokenConfig,
       toToken: toTokenConfig,
       fromAmount,
-      toAmount,
       fromBalance: fromBalanceWei,
       quoteLoading: isLoadingQuote || isFetchingQuote,
       quoteError,
@@ -301,7 +298,6 @@ export function SwapCard({
     quoteError,
     swapErrorObj,
     swapStatus,
-    toAmount,
     toTokenConfig,
   ])
 
@@ -359,131 +355,66 @@ export function SwapCard({
       toAmount: reviewParams.humanAmountOut,
       status: "pending",
     })
-    refreshRecentSwaps()
 
     try {
       await swap()
     } catch (err) {
       console.error("Swap failed:", err)
     }
-  }, [address, chainId, refreshRecentSwaps, reviewParams, swap])
+  }, [address, chainId, reviewParams, swap])
 
-  const primaryAction = useMemo(() => {
-    if (!isConnected) {
-      return {
-        label: "Connect Wallet",
-        disabled: false,
-        loading: false,
-        onClick: () => {},
-        type: "connect" as const,
+  let actionLabel = "Swap"
+  let actionDisabled = false
+  let actionLoading = false
+  let actionHandler: () => void = fromTokenConfig?.isNative ? handleReview : handleSwap
+
+  if (!isConnected) {
+    actionLabel = "Connect Wallet"
+    actionHandler = () => {}
+  } else if (!isSupportedChain) {
+    const targetChainId = recommendedChain?.chainId ?? SUPPORTED_CHAIN_IDS[0]
+    actionLabel = recommendedChain ? `Switch to ${recommendedChain.name}` : "Switch network"
+    actionDisabled = !switchChain
+    actionLoading = isSwitchingChain
+    actionHandler = () => {
+      if (switchChain) {
+        switchChain({ chainId: targetChainId })
       }
     }
-
-    if (!isSupportedChain) {
-      const targetChainId = recommendedChain?.chainId ?? SUPPORTED_CHAIN_IDS[0]
-      const label = recommendedChain ? `Switch to ${recommendedChain.name}` : "Switch network"
-      return {
-        label,
-        disabled: !switchChain,
-        loading: isSwitchingChain,
-        onClick: () => {
-          if (switchChain) {
-            switchChain({ chainId: targetChainId })
-          }
-        },
-        type: "network" as const,
-      }
+  } else if (approvePending) {
+    actionLabel = "Approving..."
+    actionDisabled = true
+    actionLoading = true
+    actionHandler = () => {}
+  } else if (currentError.code === "QUOTE_LOADING") {
+    actionLabel = "Fetching quote…"
+    actionDisabled = true
+    actionLoading = true
+    actionHandler = () => {}
+  } else if (currentError.code === "SWAP_PREPARING" || currentError.code === "SWAP_PENDING") {
+    actionLabel = "Swapping..."
+    actionDisabled = true
+    actionLoading = true
+    actionHandler = () => {}
+  } else if (allowanceLoading && !fromTokenConfig?.isNative) {
+    actionLabel = "Checking allowance..."
+    actionDisabled = true
+    actionLoading = true
+    actionHandler = () => {}
+  } else if (currentError.code === "INSUFFICIENT_ALLOWANCE") {
+    actionLabel = fromToken ? `Approve ${fromToken.symbol}` : "Approve"
+    actionDisabled = false
+    actionHandler = () => {
+      approveMax().catch((err) => console.error("Approve failed:", err))
     }
+  } else if (currentError.code !== "NONE") {
+    actionLabel = currentError.shortMessage || "Unavailable"
+    actionDisabled = true
+    actionHandler = () => {}
+  }
 
-    if (approvePending) {
-      return {
-        label: "Approving...",
-        disabled: true,
-        loading: true,
-        onClick: () => {},
-        type: "approving" as const,
-      }
-    }
-
-    if (currentError.code === "QUOTE_LOADING") {
-      return {
-        label: "Fetching quote…",
-        disabled: true,
-        loading: true,
-        onClick: () => {},
-        type: "loading" as const,
-      }
-    }
-
-    if (currentError.code === "SWAP_PREPARING" || currentError.code === "SWAP_PENDING") {
-      return {
-        label: "Swapping...",
-        disabled: true,
-        loading: true,
-        onClick: () => {},
-        type: "swapping" as const,
-      }
-    }
-
-    if (allowanceLoading && !fromTokenConfig?.isNative) {
-      return {
-        label: "Checking allowance...",
-        disabled: true,
-        loading: true,
-        onClick: () => {},
-        type: "loading" as const,
-      }
-    }
-
-    if (currentError.code === "INSUFFICIENT_ALLOWANCE") {
-      return {
-        label: fromToken ? `Approve ${fromToken.symbol}` : "Approve",
-        disabled: false,
-        loading: false,
-        onClick: async () => {
-          try {
-            await approveMax()
-          } catch (err) {
-            console.error("Approve failed:", err)
-          }
-        },
-        type: "approve" as const,
-      }
-    }
-
-    if (currentError.code !== "NONE") {
-      return {
-        label: currentError.shortMessage || "Unavailable",
-        disabled: true,
-        loading: false,
-        onClick: () => {},
-        type: "error" as const,
-      }
-    }
-
-    return {
-      label: "Swap",
-      disabled: false,
-      loading: false,
-      onClick: fromTokenConfig?.isNative ? handleReview : handleSwap,
-      type: "swap" as const,
-    }
-  }, [
-    approveMax,
-    approvePending,
-    currentError.code,
-    currentError.shortMessage,
-    fromToken,
-    fromTokenConfig?.isNative,
-    handleReview,
-    isConnected,
-    isSupportedChain,
-    isSwitchingChain,
-    recommendedChain,
-    handleSwap,
-    switchChain,
-    allowanceLoading,
-  ])
+  const onConnectHandler = isConnected ? () => {} : actionHandler
+  const reviewHandler = isConnected ? actionHandler : () => {}
 
   const getRateText = () => {
     if (!fromToken || !toToken || !fromAmount || !toAmount) {
@@ -505,8 +436,7 @@ export function SwapCard({
   }
 
   const bottomErrorMessage =
-    currentError.code !== "NONE" &&
-    !["SWAP_PREPARING", "SWAP_PENDING"].includes(currentError.code)
+    currentError.code !== "NONE" && !["SWAP_PREPARING", "SWAP_PENDING"].includes(currentError.code)
       ? currentError.longMessage
       : undefined
 
@@ -554,16 +484,18 @@ export function SwapCard({
             reviewParams={reviewParams}
             priceImpactPercent={priceImpactPercent}
             isLoadingQuote={currentError.code === "QUOTE_LOADING"}
-            quoteError={currentError.code === "QUOTE_FAILED" ? currentError.shortMessage : undefined}
+            quoteError={
+              currentError.code === "QUOTE_FAILED" ? currentError.shortMessage : undefined
+            }
           />
 
           <SwapActionButton
             isConnected={isConnected}
-            canSubmit={!primaryAction.disabled}
-            loading={primaryAction.loading}
-            buttonLabel={primaryAction.label}
-            onConnect={() => {}}
-            onReview={primaryAction.onClick}
+            canSubmit={!actionDisabled}
+            loading={actionLoading}
+            buttonLabel={actionLabel}
+            onConnect={onConnectHandler}
+            onReview={reviewHandler}
           />
 
           {bottomErrorMessage && (

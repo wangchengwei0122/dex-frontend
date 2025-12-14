@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
+import Image from "next/image"
 import { cn } from "@/lib/utils"
 
 interface TokenIconProps {
@@ -28,9 +29,11 @@ export function TokenIcon({ symbol, name, logoURI, size = 32, className }: Token
       {shouldShowFallback ? (
         <span className="text-xs font-semibold leading-none">{initials}</span>
       ) : (
-        <img
+        <Image
           src={logoURI}
           alt={name || symbol}
+          fill
+          sizes={dimension}
           className="h-full w-full object-cover"
           onError={() => setLoadError(true)}
         />

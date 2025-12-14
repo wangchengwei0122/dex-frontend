@@ -12,7 +12,7 @@ const navItems = [
   { label: "Pool", href: "/pool" },
 ]
 
-export interface AppNavbarProps extends React.HTMLAttributes<HTMLElement> {}
+type AppNavbarProps = React.HTMLAttributes<HTMLElement>
 
 const AppNavbar = React.forwardRef<HTMLElement, AppNavbarProps>(({ className, ...props }, ref) => {
   const pathname = usePathname()

@@ -104,7 +104,6 @@ interface DeriveSwapErrorParams {
   fromToken?: TokenConfig | null
   toToken?: TokenConfig | null
   fromAmount: string
-  toAmount: string
 
   // 余额
   fromBalance?: bigint
@@ -131,7 +130,6 @@ export function deriveSwapError(params: DeriveSwapErrorParams): SwapError {
     fromToken,
     toToken,
     fromAmount,
-    toAmount,
     fromBalance,
     quoteLoading,
     quoteError,

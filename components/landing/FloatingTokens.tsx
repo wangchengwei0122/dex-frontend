@@ -1,6 +1,7 @@
 "use client"
 
-import { useEffect, useState, type CSSProperties } from "react"
+import { useCallback, useMemo, useSyncExternalStore, type CSSProperties } from "react"
+import Image from "next/image"
 import { useChainId } from "wagmi"
 import { getTokensByChainId } from "@/config/tokens"
 
@@ -21,45 +22,56 @@ interface Bubble {
 
 export function FloatingTokens() {
   const chainId = useChainId()
-  const [bubbles, setBubbles] = useState<Bubble[]>([])
+  const isClient = useSyncExternalStore(
+    useCallback(() => () => {}, []),
+    () => typeof window !== "undefined",
+    () => false
+  )
 
-  useEffect(() => {
+  const bubbles = useMemo(() => {
+    if (!isClient) return []
+
     const currentTokens = getTokensByChainId(chainId)
-    if (!currentTokens.length) return
+    if (!currentTokens.length) return []
 
-    const randomized = [...currentTokens].sort(() => Math.random() - 0.5)
-    const count = Math.min(
-      randomized.length,
-      Math.floor(9 + Math.random() * 2) // 6-10 个
-    )
+    const baseSeed = chainId || 1
+    const pseudoRandom = (offset: number) => {
+      const x = Math.sin(baseSeed * 9973 + offset * 37) * 10000
+      return x - Math.floor(x)
+    }
+
+    const randomized = currentTokens
+      .map((token, index) => ({ token, score: pseudoRandom(index) }))
+      .sort((a, b) => a.score - b.score)
+      .map((item) => item.token)
+    const count = Math.min(randomized.length, Math.floor(9 + pseudoRandom(1) * 2)) // 9-11 个
 
     const baseSize = 120
     const maxOffset = 24
 
-    const generated: Bubble[] = randomized.slice(0, count).map((t, index) => {
-      const dx = Math.random() * maxOffset * (Math.random() > 0.5 ? 1 : -1)
-      const dy = Math.random() * maxOffset * (Math.random() > 0.5 ? 1 : -1)
-      const rotateFrom = Math.random() * 8 * (Math.random() > 0.5 ? 1 : -1)
-      const rotateTo = Math.random() * 8 * (Math.random() > 0.5 ? 1 : -1)
+    return randomized.slice(0, count).map((t, index) => {
+      const randomSign = (offset: number) => (pseudoRandom(offset) > 0.5 ? 1 : -1)
+      const dx = pseudoRandom(index * 5 + 2) * maxOffset * randomSign(index * 7 + 3)
+      const dy = pseudoRandom(index * 5 + 4) * maxOffset * randomSign(index * 7 + 5)
+      const rotateFrom = pseudoRandom(index * 11 + 1) * 8 * randomSign(index * 13 + 1)
+      const rotateTo = pseudoRandom(index * 11 + 2) * 8 * randomSign(index * 13 + 3)
 
       return {
         id: `${t.symbol}-${index}`,
         symbol: t.symbol,
-        logoURI: (t as any).logoURI,
-        x: 8 + Math.random() * 84, // 8% - 92% 之间
-        y: 6 + Math.random() * 70, // 6% - 76% 之间
+        logoURI: t.logoURI,
+        x: 8 + pseudoRandom(index * 17 + 1) * 84, // 8% - 92% 之间
+        y: 6 + pseudoRandom(index * 19 + 2) * 70, // 6% - 76% 之间
         size: baseSize,
         dx,
         dy,
         rotateFrom,
         rotateTo,
-        duration: 18 + Math.random() * 12, // 18s - 30s
-        delay: Math.random() * 8,
+        duration: 18 + pseudoRandom(index * 23 + 3) * 12, // 18s - 30s
+        delay: pseudoRandom(index * 29 + 4) * 8,
       }
     })
-
-    setBubbles(generated)
-  }, [chainId])
+  }, [chainId, isClient])
 
   if (!bubbles.length) return null
 
@@ -95,9 +107,11 @@ function TokenBubble({ bubble }: TokenBubbleProps) {
       style={style}
     >
       {bubble.logoURI ? (
-        <img
+        <Image
           src={bubble.logoURI}
           alt={bubble.symbol}
+          width={48}
+          height={48}
           className="h-12 w-12 rounded-full object-cover"
         />
       ) : (
