@@ -7,6 +7,7 @@ import type { TokenConfig } from "@/config/tokens"
 import { AppPanel } from "@/components/app/app-panel"
 import { AppInput } from "@/components/app/app-input"
 import { cn } from "@/lib/utils"
+import { TokenIcon } from "@/components/shared/token-icon"
 
 export interface TokensListProps {
   tokens: TokenConfig[]
@@ -16,14 +17,6 @@ export interface TokensListProps {
 interface TokenRowProps {
   token: TokenConfig
   onSelect: (token: TokenConfig) => void
-}
-
-function TokenAvatar({ token }: { token: TokenConfig }) {
-  return (
-    <div className="h-9 w-9 rounded-full bg-gradient-to-br from-[#C9A227] to-[#F6D27A] text-black font-bold text-xs flex items-center justify-center shadow-[0_0_18px_rgba(201,162,39,0.35)]">
-      {token.symbol.slice(0, 2).toUpperCase()}
-    </div>
-  )
 }
 
 function TokenRow({ token, onSelect }: TokenRowProps) {
@@ -37,7 +30,13 @@ function TokenRow({ token, onSelect }: TokenRowProps) {
       )}
     >
       <div className="flex items-center gap-3 text-left">
-        <TokenAvatar token={token} />
+        <TokenIcon
+          symbol={token.symbol}
+          name={token.name}
+          logoURI={token.logoURI}
+          size={36}
+          className="shadow-[0_0_18px_rgba(201,162,39,0.35)]"
+        />
         <div>
           <div className="text-sm font-semibold text-amber-50">{token.name}</div>
           <div className="text-xs text-zinc-500">{token.symbol}</div>

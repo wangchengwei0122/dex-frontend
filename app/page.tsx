@@ -16,7 +16,7 @@ export default function HomePage() {
       <PageFogOverlay />
 
       {/* 内容层：标题 + Swap，不被模糊 */}
-      <section className="relative z-20 mx-auto flex max-w-2xl flex-col items-center px-4 py-16 md:py-24 space-y-10">
+      <section className="relative z-20 mx-auto flex max-w-3xl flex-col items-center px-4 py-16 md:py-24 space-y-10">
         <h1 className="text-center text-4xl md:text-6xl font-semibold tracking-tight">
           Swap anytime, anywhere.
         </h1>

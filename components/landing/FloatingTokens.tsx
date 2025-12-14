@@ -30,10 +30,10 @@ export function FloatingTokens() {
     const randomized = [...currentTokens].sort(() => Math.random() - 0.5)
     const count = Math.min(
       randomized.length,
-      Math.floor(6 + Math.random() * 5) // 6-10 个
+      Math.floor(9 + Math.random() * 2) // 6-10 个
     )
 
-    const baseSize = 150
+    const baseSize = 120
     const maxOffset = 24
 
     const generated: Bubble[] = randomized.slice(0, count).map((t, index) => {
@@ -101,7 +101,7 @@ function TokenBubble({ bubble }: TokenBubbleProps) {
           className="h-12 w-12 rounded-full object-cover"
         />
       ) : (
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-yellow-400/80 to-amber-500/80 text-sm font-semibold text-black">
+        <div className="flex h-full w-full items-center justify-center rounded-full bg-gradient-to-br from-yellow-400/80 to-amber-500/80 text-sm font-semibold text-black">
           {bubble.symbol.slice(0, 2).toUpperCase()}
         </div>
       )}

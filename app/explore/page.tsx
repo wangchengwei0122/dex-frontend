@@ -2,7 +2,7 @@
 
 import { useMemo } from "react"
 import { AlertTriangle } from "lucide-react"
-import { useAccount, useChainId } from "wagmi"
+import { useConnection, useChainId } from "wagmi"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TokensList } from "@/components/explore/TokensList"
 import { PoolsList } from "@/components/explore/PoolsList"
@@ -12,15 +12,14 @@ import { getPoolsByChainId } from "@/config/pools"
 import { useUserPools } from "@/features/swap/engine"
 
 export default function ExplorePage() {
-  const { address, isConnected } = useAccount()
+  const { address, isConnected } = useConnection()
   const chainId = useChainId()
 
   const dexChainConfig = getDexChainConfig(chainId)
   const dataChainId = dexChainConfig ? chainId : PREFERRED_CHAIN_ID
 
   const supportedNetworksLabel = useMemo(
-    () =>
-      SUPPORTED_CHAIN_IDS.map((id) => getDexChainConfig(id)?.name || `Chain ${id}`).join(" / "),
+    () => SUPPORTED_CHAIN_IDS.map((id) => getDexChainConfig(id)?.name || `Chain ${id}`).join(" / "),
     []
   )
 
@@ -37,9 +36,7 @@ export default function ExplorePage() {
       <div className="space-y-2">
         <p className="text-xs uppercase tracking-[0.24em] text-zinc-500">Discover</p>
         <h1 className="text-3xl font-semibold text-amber-100">Explore</h1>
-        <p className="text-sm text-zinc-400">
-          Browse tokens and pools supported by this DEX.
-        </p>
+        <p className="text-sm text-zinc-400">Browse tokens and pools supported by this DEX.</p>
       </div>
 
       {!dexChainConfig && (
@@ -48,7 +45,8 @@ export default function ExplorePage() {
           <div className="space-y-1">
             <div className="text-sm font-semibold text-amber-100">Unsupported network</div>
             <div className="text-xs text-amber-50/80">
-              Explore data is shown from configured networks. Switch to {supportedNetworksLabel} for on-chain actions.
+              Explore data is shown from configured networks. Switch to {supportedNetworksLabel} for
+              on-chain actions.
             </div>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import type { TokenConfig } from '../tokens'
+import type { TokenConfig } from "../tokens"
 
 /**
  * Ethereum Sepolia Testnet Token 配置
@@ -6,57 +6,123 @@ import type { TokenConfig } from '../tokens'
 export const SEPOLIA_TOKENS: TokenConfig[] = [
   {
     chainId: 11155111,
-    address: '0x0000000000000000000000000000000000000000', // 约定原生 ETH
-    symbol: 'ETH',
-    name: 'Sepolia Ether',
+    address: "0x0000000000000000000000000000000000000000", // 约定原生 ETH
+    symbol: "ETH",
+    name: "Sepolia Ether",
     decimals: 18,
     isNative: true,
-    wrappedAddress: '0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14', // Sepolia WETH
+    wrappedAddress: "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14", // Sepolia WETH
     priority: 1,
-    tags: ['bluechip'],
+    tags: ["bluechip"],
+    logoURI: "/tokens/sepolia/ETH.png",
   },
   {
     chainId: 11155111,
-    address: '0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14',
-    symbol: 'WETH',
-    name: 'Wrapped Ether',
+    address: "0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14",
+    symbol: "WETH",
+    name: "Wrapped Ether",
     decimals: 18,
     priority: 2,
-    tags: ['bluechip'],
+    tags: ["bluechip"],
+    logoURI: "/tokens/sepolia/WETH.png",
   },
   {
     chainId: 11155111,
     // USDC - Ethereum Sepolia（Circle 官方 & Uniswap 上线）
     // https://app.uniswap.org/explore/tokens/ethereum_sepolia/0x1c7d4b196cb0c7b01d743fbc6116a902379c7238
-    address: '0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238',
-    symbol: 'USDC',
-    name: 'USD Coin',
+    address: "0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238",
+    symbol: "USDC",
+    name: "USD Coin",
     decimals: 6,
     priority: 3,
     isStable: true,
-    tags: ['stable'],
+    tags: ["stable"],
+    logoURI: "/tokens/sepolia/USDC.png",
   },
   {
     chainId: 11155111,
     // USDT - Ethereum Sepolia（Uniswap 上线）
     // https://app.uniswap.org/explore/tokens/ethereum_sepolia/0xaa8e23fb1079ea71e0a56f48a2aa51851d8433d0
-    address: '0xaa8e23fb1079Ea71E0A56F48A2AA51851d8433d0',
-    symbol: 'USDT',
-    name: 'Tether USD',
+    address: "0xaa8e23fb1079Ea71E0A56F48A2AA51851d8433d0",
+    symbol: "USDT",
+    name: "Tether USD",
     decimals: 6,
     priority: 4,
     isStable: true,
-    tags: ['stable'],
+    tags: ["stable"],
+    logoURI: "/tokens/sepolia/USDT.png",
   },
   {
     chainId: 11155111,
     // WBTC - Ethereum Sepolia（Uniswap 上线）
     // https://app.uniswap.org/explore/tokens/ethereum_sepolia/0x52eea312378ef46140ebe67de8a143ba2304fd7c
-    address: '0x52eEa312378Ef46140EBe67dE8A143ba2304fD7c',
-    symbol: 'WBTC',
-    name: 'Wrapped Bitcoin',
+    address: "0x52eEa312378Ef46140EBe67dE8A143ba2304fD7c",
+    symbol: "WBTC",
+    name: "Wrapped Bitcoin",
     decimals: 8,
     priority: 5,
-    tags: ['bluechip'],
+    tags: ["bluechip"],
+    logoURI: "/tokens/sepolia/WBTC.png",
+  },
+  {
+    chainId: 11155111,
+    // UNI - Ethereum Sepolia（Uniswap 上线测试 Token）
+    // https://app.uniswap.org/explore/tokens/ethereum_sepolia/0x75faf114eafb1bdbe2f0316df893fd58ce46aa4d
+    address: "0x75fAF114Eafb1BDbe2F0316DF893fd58Ce46AA4d",
+    symbol: "UNI",
+    name: "Uniswap",
+    decimals: 18,
+    priority: 6,
+    tags: ["defi"],
+    logoURI: "/tokens/sepolia/UNI.png",
+  },
+  {
+    chainId: 11155111,
+    // LINK - Ethereum Sepolia（Chainlink 官方测试 Token）
+    // https://docs.chain.link/resources/link-token-contracts
+    address: "0x779877A7B0D9E8603169DdbD7836e478b4624789",
+    symbol: "LINK",
+    name: "Chainlink",
+    decimals: 18,
+    priority: 7,
+    tags: ["oracle", "defi"],
+    logoURI: "/tokens/sepolia/LINK.png",
+  },
+  {
+    chainId: 11155111,
+    // DAI - Ethereum Sepolia（Uniswap 上线测试 Token）
+    // https://app.uniswap.org/explore/tokens/ethereum_sepolia/0x68194a729c2450ad26072b3d33adacbcef39d574
+    address: "0x68194A729C2450ad26072b3D33AdACbcef39D574",
+    symbol: "DAI",
+    name: "Dai Stablecoin",
+    decimals: 18,
+    priority: 8,
+    isStable: true,
+    tags: ["stable"],
+    logoURI: "/tokens/sepolia/DAI.png",
+  },
+  {
+    chainId: 11155111,
+    // AAVE - Ethereum Sepolia（Uniswap 上线测试 Token）
+    // https://app.uniswap.org/explore/tokens/ethereum_sepolia/0x4a4f8c2c1d9c9f0b4f6a9a4d36d8c0a2a8cba6f1
+    address: "0x4A4F8C2C1d9C9F0B4F6A9A4D36d8C0A2A8CBa6F1",
+    symbol: "AAVE",
+    name: "Aave Token",
+    decimals: 18,
+    priority: 9,
+    tags: ["defi", "lending"],
+    logoURI: "/tokens/sepolia/AAVE.png",
+  },
+  {
+    chainId: 11155111,
+    // LDO - Ethereum Sepolia（Uniswap 上线测试 Token）
+    // https://app.uniswap.org/explore/tokens/ethereum_sepolia/0x9f7b5f7b9a9d6e1b2e4f3b5d1c8f0a6e2d5b9f2c
+    address: "0x9F7b5F7B9A9d6E1B2E4f3b5D1C8F0A6E2D5B9F2c",
+    symbol: "LDO",
+    name: "Lido DAO Token",
+    decimals: 18,
+    priority: 10,
+    tags: ["defi", "staking", "lsd"],
+    logoURI: "/tokens/sepolia/LDO.png",
   },
 ]

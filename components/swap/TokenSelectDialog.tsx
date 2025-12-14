@@ -5,6 +5,7 @@ import { AppDialog, AppDialogContent } from "@/components/app/app-dialog"
 import { AppInput } from "@/components/app/app-input"
 import { Check } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { TokenIcon } from "@/components/shared/token-icon"
 import type { Side, Token } from "@/features/swap/engine"
 
 export interface TokenSelectDialogProps {
@@ -94,9 +95,13 @@ export function TokenSelectDialog({
                       )}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-full bg-gradient-to-br from-[#C9A227] to-[#F6D27A] flex items-center justify-center text-xs font-bold text-black">
-                          {token.symbol.slice(0, 2)}
-                        </div>
+                        <TokenIcon
+                          symbol={token.symbol}
+                          name={token.name}
+                          logoURI={token.logoURI}
+                          size={32}
+                          className="shadow-none"
+                        />
                         <div className="text-left">
                           <div className="text-sm font-medium text-zinc-50">
                             {token.name}
