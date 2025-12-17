@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react"
 import { useWriteContract, useWaitForTransactionReceipt, useSimulateContract } from "wagmi"
 import { erc20Abi, maxUint256, type Address } from "viem"
+import { toSupportedChainId, type SupportedChainId } from "@/config/chains"
 import type { TokenConfig } from "@/config/tokens"
 
 export interface UseTokenApprovalParams {
@@ -11,7 +12,7 @@ export interface UseTokenApprovalParams {
   /** Spender 地址（通常是 Router 地址） */
   spender?: Address
   /** 链 ID */
-  chainId?: number
+  chainId?: SupportedChainId
 }
 
 export interface UseTokenApprovalResult {
@@ -52,6 +53,7 @@ export function useTokenApproval({
   spender,
   chainId,
 }: UseTokenApprovalParams): UseTokenApprovalResult {
+  const supportedChainId = toSupportedChainId(chainId)
   const [manualError, setManualError] = useState<Error | null>(null)
   const isNativeToken = token?.isNative || token?.address === 'native'
 
@@ -61,7 +63,7 @@ export function useTokenApproval({
     abi: erc20Abi,
     functionName: "approve",
     args: spender ? [spender, maxUint256] : undefined,
-    chainId: chainId as any,
+    chainId: supportedChainId,
     query: {
       enabled: Boolean(token && !isNativeToken && spender && owner),
     },
@@ -85,7 +87,7 @@ export function useTokenApproval({
     error: receiptError,
   } = useWaitForTransactionReceipt({
     hash,
-    chainId: chainId as any,
+    chainId: supportedChainId,
   })
 
   const derivedError = useMemo(() => {

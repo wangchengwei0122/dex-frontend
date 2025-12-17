@@ -6,17 +6,25 @@ import { useConnection, useChainId } from "wagmi"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TokensList } from "@/components/explore/TokensList"
 import { PoolsList } from "@/components/explore/PoolsList"
-import { getDexChainConfig, PREFERRED_CHAIN_ID, SUPPORTED_CHAIN_IDS } from "@/config/chains"
+import {
+  getDexChainConfig,
+  PREFERRED_CHAIN_ID,
+  SUPPORTED_CHAIN_IDS,
+  toSupportedChainId,
+  type SupportedChainId,
+} from "@/config/chains"
 import { getTokensByChainId } from "@/config/tokens"
 import { getPoolsByChainId } from "@/config/pools"
 import { useUserPools } from "@/features/swap/engine"
 
 export default function ExplorePage() {
   const { address, isConnected } = useConnection()
-  const chainId = useChainId()
+  const chainId = toSupportedChainId(useChainId())
 
   const dexChainConfig = getDexChainConfig(chainId)
-  const dataChainId = dexChainConfig ? chainId : PREFERRED_CHAIN_ID
+  const dataChainId: SupportedChainId =
+    toSupportedChainId(dexChainConfig ? chainId : PREFERRED_CHAIN_ID) ??
+    (PREFERRED_CHAIN_ID as SupportedChainId)
 
   const supportedNetworksLabel = useMemo(
     () => SUPPORTED_CHAIN_IDS.map((id) => getDexChainConfig(id)?.name || `Chain ${id}`).join(" / "),

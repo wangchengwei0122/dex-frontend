@@ -5,13 +5,13 @@ import { useQuery } from "@tanstack/react-query"
 import { usePublicClient } from "wagmi"
 import { formatUnits, type Address } from "viem"
 import { getPoolsByChainId } from "@/config/pools"
-import { getDexChainConfig } from "@/config/chains"
+import { getDexChainConfig, toSupportedChainId, type SupportedChainId } from "@/config/chains"
 import type { TokenConfig } from "@/config/tokens"
 import type { UserPoolPosition } from "./types"
 import { uniswapV2PairAbi } from "@/lib/abi/uniswapV2Pair"
 
 interface UseUserPoolsParams {
-  chainId?: number
+  chainId?: SupportedChainId
   account?: Address
 }
 
@@ -39,25 +39,26 @@ function formatTokenAmount(value: bigint, token: TokenConfig): string {
 }
 
 export function useUserPools({ chainId, account }: UseUserPoolsParams): UseUserPoolsResult {
-  const dexChainConfig = getDexChainConfig(chainId)
-  const shouldQuery = Boolean(chainId && account && dexChainConfig)
+  const supportedChainId = toSupportedChainId(chainId)
+  const dexChainConfig = getDexChainConfig(supportedChainId)
+  const shouldQuery = Boolean(supportedChainId && account && dexChainConfig)
 
-  const publicClient = usePublicClient({ chainId })
+  const publicClient = usePublicClient({ chainId: supportedChainId })
 
   const pools = useMemo(
-    () => (shouldQuery && chainId ? getPoolsByChainId(chainId) : []),
-    [chainId, shouldQuery]
+    () => (shouldQuery && supportedChainId ? getPoolsByChainId(supportedChainId) : []),
+    [shouldQuery, supportedChainId]
   )
 
   const enabled = Boolean(shouldQuery && publicClient && pools.length)
 
   const query = useQuery<UserPoolPosition[]>({
-    queryKey: ["user-pools", chainId, account, pools.map((pool) => pool.id).join(",")],
+    queryKey: ["user-pools", supportedChainId, account, pools.map((pool) => pool.id).join(",")],
     enabled,
     staleTime: 15_000,
     refetchInterval: 30_000,
     queryFn: async (): Promise<UserPoolPosition[]> => {
-      if (!publicClient || !account || !chainId || !pools.length) return []
+      if (!publicClient || !account || !supportedChainId || !pools.length) return []
 
       const contracts = pools.flatMap((pool) => [
         { address: pool.pairAddress, abi: uniswapV2PairAbi, functionName: "getReserves" } as const,
@@ -72,7 +73,7 @@ export function useUserPools({ chainId, account }: UseUserPoolsParams): UseUserP
         { address: pool.pairAddress, abi: uniswapV2PairAbi, functionName: "token1" } as const,
       ])
 
-      const { results } = await publicClient.multicall({
+      const results = await publicClient.multicall({
         allowFailure: true,
         contracts,
       })
@@ -95,7 +96,7 @@ export function useUserPools({ chainId, account }: UseUserPoolsParams): UseUserP
           continue
         }
 
-        const [reserve0Raw, reserve1Raw] = reservesResult.result
+        const [reserve0Raw, reserve1Raw] = reservesResult.result as readonly [bigint, bigint, number]
         const lpTotalSupply = totalSupplyResult.result as bigint
         const lpBalance = balanceResult.result as bigint
 

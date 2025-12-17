@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useWriteContract, useWaitForTransactionReceipt, useSimulateContract } from 'wagmi'
 import { parseUnits, type Address } from 'viem'
 import { uniswapV2RouterAbi } from '@/lib/abi/uniswapV2Router'
-import { getDexChainConfig } from '@/config/chains'
+import { getDexChainConfig, toSupportedChainId, type SupportedChainId } from '@/config/chains'
 import type { TokenConfig } from '@/config/tokens'
 import type { SwapStatus } from './types'
 
@@ -20,7 +20,7 @@ export interface UseSwapParams {
   /** 交易截止时间（分钟），默认 20 分钟 */
   deadlineMinutes?: number
   /** 链 ID */
-  chainId?: number
+  chainId?: SupportedChainId
 }
 
 export interface UseSwapResult {
@@ -73,12 +73,15 @@ export function useSwap({
   deadlineMinutes = 20,
   chainId,
 }: UseSwapParams): UseSwapResult {
+  const supportedChainId = toSupportedChainId(chainId)
   const [status, setStatus] = useState<SwapStatus>('idle')
   const [error, setError] = useState<Error | null>(null)
   const [txHash, setTxHash] = useState<`0x${string}` | undefined>()
 
   // 获取 Router 地址
-  const routerAddress = chainId ? getDexChainConfig(chainId)?.routerAddress : undefined
+  const routerAddress = supportedChainId
+    ? getDexChainConfig(supportedChainId)?.routerAddress
+    : undefined
 
   // 计算数量（bigint）
   const amountInWei = (() => {
@@ -125,7 +128,7 @@ export function useSwap({
     recipient &&
     routerAddress &&
     path &&
-    chainId
+    supportedChainId
   )
 
   // 模拟合约调用
@@ -136,7 +139,7 @@ export function useSwap({
     args: path && recipient
       ? [amountInWei, amountOutMinWei, path, recipient, BigInt(deadline)]
       : undefined,
-    chainId: chainId as any,
+    chainId: supportedChainId,
     query: {
       enabled: shouldEnable,
     },
@@ -160,7 +163,7 @@ export function useSwap({
     error: receiptError,
   } = useWaitForTransactionReceipt({
     hash,
-    chainId: chainId as any,
+    chainId: supportedChainId,
   })
 
   // 更新交易哈希
@@ -233,7 +236,7 @@ export function useSwap({
       !recipient ||
       !routerAddress ||
       !path ||
-      !chainId
+      !supportedChainId
     ) {
       return
     }

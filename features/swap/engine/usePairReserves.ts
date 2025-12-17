@@ -1,7 +1,7 @@
 import { useMemo } from "react"
 import { useReadContract } from "wagmi"
 import { zeroAddress, type Address } from "viem"
-import { getDexChainConfig } from "@/config/chains"
+import { getDexChainConfig, toSupportedChainId, type SupportedChainId } from "@/config/chains"
 import type { TokenConfig } from "@/config/tokens"
 import { uniswapV2RouterAbi } from "@/lib/abi/uniswapV2Router"
 import { uniswapV2FactoryAbi } from "@/lib/abi/uniswapV2Factory"
@@ -10,7 +10,7 @@ import { uniswapV2PairAbi } from "@/lib/abi/uniswapV2Pair"
 interface UsePairReservesParams {
   fromToken?: TokenConfig | null
   toToken?: TokenConfig | null
-  chainId?: number
+  chainId?: SupportedChainId
 }
 
 interface UsePairReservesResult {
@@ -22,8 +22,9 @@ interface UsePairReservesResult {
 
 export function usePairReserves(params: UsePairReservesParams): UsePairReservesResult {
   const { fromToken, toToken, chainId } = params
+  const supportedChainId = toSupportedChainId(chainId)
 
-  const dexChainConfig = getDexChainConfig(chainId)
+  const dexChainConfig = getDexChainConfig(supportedChainId)
   const routerAddress = dexChainConfig?.routerAddress
 
   const normalizedFrom: Address | undefined = useMemo(() => {
@@ -40,7 +41,7 @@ export function usePairReserves(params: UsePairReservesParams): UsePairReservesR
     return toToken.address as Address
   }, [toToken])
 
-  const canQuery = Boolean(chainId && routerAddress && normalizedFrom && normalizedTo)
+  const canQuery = Boolean(supportedChainId && routerAddress && normalizedFrom && normalizedTo)
 
   const {
     data: factoryAddress,
@@ -50,7 +51,7 @@ export function usePairReserves(params: UsePairReservesParams): UsePairReservesR
     address: routerAddress,
     abi: uniswapV2RouterAbi,
     functionName: "factory",
-    chainId: chainId as any,
+    chainId: supportedChainId,
     query: {
       enabled: canQuery,
     },
@@ -67,7 +68,7 @@ export function usePairReserves(params: UsePairReservesParams): UsePairReservesR
     abi: uniswapV2FactoryAbi,
     functionName: "getPair",
     args: normalizedFrom && normalizedTo ? [normalizedFrom, normalizedTo] : undefined,
-    chainId: chainId as any,
+    chainId: supportedChainId,
     query: {
       enabled: Boolean(hasFactory && normalizedFrom && normalizedTo),
     },
@@ -84,7 +85,7 @@ export function usePairReserves(params: UsePairReservesParams): UsePairReservesR
     address: hasPair ? pair : undefined,
     abi: uniswapV2PairAbi,
     functionName: "token0",
-    chainId: chainId as any,
+    chainId: supportedChainId,
     query: {
       enabled: Boolean(hasPair),
     },
@@ -98,7 +99,7 @@ export function usePairReserves(params: UsePairReservesParams): UsePairReservesR
     address: hasPair ? pair : undefined,
     abi: uniswapV2PairAbi,
     functionName: "token1",
-    chainId: chainId as any,
+    chainId: supportedChainId,
     query: {
       enabled: Boolean(hasPair),
     },
@@ -112,7 +113,7 @@ export function usePairReserves(params: UsePairReservesParams): UsePairReservesR
     address: hasPair ? pair : undefined,
     abi: uniswapV2PairAbi,
     functionName: "getReserves",
-    chainId: chainId as any,
+    chainId: supportedChainId,
     query: {
       enabled: Boolean(hasPair),
     },

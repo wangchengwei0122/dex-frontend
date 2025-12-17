@@ -11,19 +11,13 @@ import { AppSectionTitle } from "@/components/app/app-section-title"
 import { TokenIcon } from "@/components/shared/token-icon"
 import { getDexChainConfig, SUPPORTED_CHAIN_IDS } from "@/config/chains"
 import { getPoolsByChainId, type PoolConfig } from "@/config/pools"
-import { usePoolOverview, useUserLiquidity } from "@/features/pool/hooks"
+import { usePoolOverview } from "@/features/pool/hooks"
+import { useUserPools } from "@/features/swap/engine/useUserPools"
+import type { UserPoolPosition } from "@/features/swap/engine/types"
 
 interface PoolWithLiquidity {
   pool: PoolConfig
-  liquidity?: ReturnType<typeof useUserLiquidity>["data"]
-  liquidityLoading: boolean
-  liquidityError: boolean
-}
-
-function formatAmount(value: number): string {
-  if (!Number.isFinite(value)) return "0"
-  const fixed = value >= 1 ? value.toFixed(4) : value.toFixed(6)
-  return fixed.replace(/\.?0+$/, "") || "0"
+  liquidity?: UserPoolPosition
 }
 
 function formatPrice(value: number | null): string {
@@ -68,10 +62,10 @@ function MyPoolsList({ items }: { items: PoolWithLiquidity[] }) {
 
           <div className="text-sm text-right sm:text-left">
             <div className="text-amber-50">
-              Pooled: {formatAmount(liquidity?.amount0 ?? 0)} {pool.token0.symbol}
+              Pooled: {liquidity?.pooledToken0 ?? "0"} {pool.token0.symbol}
             </div>
             <div className="text-zinc-400">
-              + {formatAmount(liquidity?.amount1 ?? 0)} {pool.token1.symbol}
+              + {liquidity?.pooledToken1 ?? "0"} {pool.token1.symbol}
             </div>
           </div>
 
@@ -106,84 +100,85 @@ function AllPoolsList({
   liquidityMap,
 }: {
   pools: PoolConfig[]
-  liquidityMap: Map<string, ReturnType<typeof useUserLiquidity>["data"] | undefined>
+  liquidityMap: Map<string, UserPoolPosition | undefined>
 }) {
-  const overviewResults = pools.map((pool) => ({
-    pool,
-    overview: usePoolOverview({ pool }),
-  }))
-
   return (
     <div className="divide-y divide-white/5 rounded-2xl border border-[rgba(201,162,39,0.25)] bg-[rgba(12,12,14,0.8)]">
-      {overviewResults.map(({ pool, overview }) => {
-        const liquidity = liquidityMap.get(pool.id)
-        const isLoading = overview.isLoading
-        const hasError = overview.isError
-        const price0 = overview.data?.price0Per1 ?? null
-        const price1 = overview.data?.price1Per1 ?? null
+      {pools.map((pool) => (
+        <PoolOverviewRow key={pool.id} pool={pool} liquidity={liquidityMap.get(pool.id)} />
+      ))}
+    </div>
+  )
+}
 
-        return (
-          <div
-            key={pool.id}
-            className="flex flex-col gap-3 px-4 py-4 sm:grid sm:grid-cols-[1.4fr_1.2fr_1fr_0.8fr] sm:items-center"
-          >
-            <div className="flex items-center gap-3">
-              <div className="relative h-10 w-10">
-                <TokenIcon
-                  symbol={pool.token0.symbol}
-                  name={pool.token0.name}
-                  logoURI={pool.token0.logoURI}
-                  size={40}
-                  className="absolute left-0 top-0"
-                />
-                <TokenIcon
-                  symbol={pool.token1.symbol}
-                  name={pool.token1.name}
-                  logoURI={pool.token1.logoURI}
-                  size={36}
-                  className="absolute left-5 top-2 border-2 border-[#0A0A0C] shadow-[0_0_16px_rgba(201,162,39,0.15)]"
-                />
-              </div>
-              <div>
-                <div className="text-sm font-semibold text-amber-100">
-                  {pool.token0.symbol} / {pool.token1.symbol}
-                </div>
-                <div className="text-xs text-zinc-500">
-                  Pair {pool.pairAddress.slice(0, 6)}...{pool.pairAddress.slice(-4)}
-                </div>
-              </div>
-            </div>
+function PoolOverviewRow({
+  pool,
+  liquidity,
+}: {
+  pool: PoolConfig
+  liquidity?: UserPoolPosition
+}) {
+  const overview = usePoolOverview({ pool })
 
-            <div className="text-sm text-amber-50">
-              {isLoading ? (
-                <span className="text-zinc-500">Loading price...</span>
-              ) : hasError ? (
-                <span className="text-rose-200">Failed to fetch price</span>
-              ) : (
-                <>
-                  <div>
-                    Price: 1 {pool.token0.symbol} ≈ {formatPrice(price0)} {pool.token1.symbol}
-                  </div>
-                  <div className="text-xs text-zinc-500">
-                    1 {pool.token1.symbol} ≈ {formatPrice(price1)} {pool.token0.symbol}
-                  </div>
-                </>
-              )}
-            </div>
+  const isLoading = overview.isLoading
+  const hasError = overview.isError
+  const price0 = overview.data?.price0Per1 ?? null
+  const price1 = overview.data?.price1Per1 ?? null
 
-            <div className="text-sm text-zinc-300">
-              My share:{" "}
-              {liquidity ? (
-                `${liquidity.sharePercent.toFixed(2)}%`
-              ) : (
-                <span className="text-zinc-500">—</span>
-              )}
-            </div>
-
-            <div className="text-sm text-right text-zinc-400">TVL —</div>
+  return (
+    <div
+      className="flex flex-col gap-3 px-4 py-4 sm:grid sm:grid-cols-[1.4fr_1.2fr_1fr_0.8fr] sm:items-center"
+    >
+      <div className="flex items-center gap-3">
+        <div className="relative h-10 w-10">
+          <TokenIcon
+            symbol={pool.token0.symbol}
+            name={pool.token0.name}
+            logoURI={pool.token0.logoURI}
+            size={40}
+            className="absolute left-0 top-0"
+          />
+          <TokenIcon
+            symbol={pool.token1.symbol}
+            name={pool.token1.name}
+            logoURI={pool.token1.logoURI}
+            size={36}
+            className="absolute left-5 top-2 border-2 border-[#0A0A0C] shadow-[0_0_16px_rgba(201,162,39,0.15)]"
+          />
+        </div>
+        <div>
+          <div className="text-sm font-semibold text-amber-100">
+            {pool.token0.symbol} / {pool.token1.symbol}
           </div>
-        )
-      })}
+          <div className="text-xs text-zinc-500">
+            Pair {pool.pairAddress.slice(0, 6)}...{pool.pairAddress.slice(-4)}
+          </div>
+        </div>
+      </div>
+
+      <div className="text-sm text-amber-50">
+        {isLoading ? (
+          <span className="text-zinc-500">Loading price...</span>
+        ) : hasError ? (
+          <span className="text-rose-200">Failed to fetch price</span>
+        ) : (
+          <>
+            <div>
+              Price: 1 {pool.token0.symbol} ≈ {formatPrice(price0)} {pool.token1.symbol}
+            </div>
+            <div className="text-xs text-zinc-500">
+              1 {pool.token1.symbol} ≈ {formatPrice(price1)} {pool.token0.symbol}
+            </div>
+          </>
+        )}
+      </div>
+
+      <div className="text-sm text-zinc-300">
+        My share:{" "}
+        {liquidity ? `${liquidity.sharePercent.toFixed(2)}%` : <span className="text-zinc-500">—</span>}
+      </div>
+
+      <div className="text-sm text-right text-zinc-400">TVL —</div>
     </div>
   )
 }
@@ -202,33 +197,36 @@ export function PoolPage() {
 
   const pools = useMemo(() => getPoolsByChainId(chainId), [chainId])
 
-  const liquidityResults = pools.map((pool) => ({
-    pool,
-    hook: useUserLiquidity({
-      pool,
-      account: address,
-    }),
-  }))
+  const {
+    positions,
+    isLoading: isLoadingUserPools,
+    isError: hasUserPoolError,
+  } = useUserPools({ chainId, account: address })
 
   const liquidityMap = useMemo(
-    () => new Map(liquidityResults.map((item) => [item.pool.id, item.hook.data])),
-    [liquidityResults]
+    () => new Map(positions.map((position) => [position.poolId, position])),
+    [positions]
   )
 
-  const errorCount = liquidityResults.filter(({ hook }) => hook.isError).length
-  const myPools = liquidityResults
-    .filter(({ hook }) => hook.data && hook.data.sharePercent > 0)
-    .map(({ pool, hook }) => ({
-      pool,
-      liquidity: hook.data!,
-      liquidityLoading: hook.isLoading,
-      liquidityError: hook.isError,
-    }))
+  const myPools = useMemo(
+    () =>
+      positions
+        .map((position) => {
+          const pool = pools.find((item) => item.id === position.poolId)
+          if (!pool) return undefined
+          return {
+            pool,
+            liquidity: position,
+          }
+        })
+        .filter(Boolean) as PoolWithLiquidity[],
+    [pools, positions]
+  )
 
-  const isLoadingMyPools = liquidityResults.some(({ hook }) => hook.isLoading)
+  const isLoadingMyPools = isLoadingUserPools
 
   const showEmptyMyPools =
-    isConnected && dexChainConfig && !isLoadingMyPools && !myPools.length && errorCount === 0
+    isConnected && dexChainConfig && !isLoadingMyPools && !myPools.length && !hasUserPoolError
 
   return (
     <div className="py-10 space-y-8">
@@ -273,6 +271,10 @@ export function PoolPage() {
           </div>
         ) : isLoadingMyPools ? (
           <SkeletonList />
+        ) : hasUserPoolError && !myPools.length ? (
+          <div className="rounded-2xl border border-[rgba(255,99,99,0.35)] bg-[rgba(120,20,20,0.28)] px-4 py-5 text-center text-sm text-rose-100">
+            Failed to load your liquidity, please try again later.
+          </div>
         ) : showEmptyMyPools ? (
           <div className="flex flex-col items-center justify-center gap-4 rounded-2xl border border-white/10 bg-[rgba(255,255,255,0.02)] p-10 text-center">
             <p className="text-lg font-semibold text-amber-100">No liquidity positions yet</p>
@@ -290,16 +292,7 @@ export function PoolPage() {
           </div>
         ) : myPools.length ? (
           <>
-            {errorCount > 0 ? (
-              <div className="rounded-xl border border-[rgba(255,99,99,0.35)] bg-[rgba(120,20,20,0.28)] px-4 py-3 text-sm text-rose-100">
-                Some pools failed to load. Showing available positions.
-              </div>
-            ) : null}
-            <MyPoolsList items={myPools} />
-          </>
-        ) : myPools.length ? (
-          <>
-            {errorCount > 0 ? (
+            {hasUserPoolError ? (
               <div className="rounded-xl border border-[rgba(255,99,99,0.35)] bg-[rgba(120,20,20,0.28)] px-4 py-3 text-sm text-rose-100">
                 Some pools failed to load. Showing available positions.
               </div>

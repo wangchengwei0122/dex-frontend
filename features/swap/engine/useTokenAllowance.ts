@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { usePublicClient } from 'wagmi'
 import { erc20Abi, type Address } from 'viem'
+import { toSupportedChainId, type SupportedChainId } from '@/config/chains'
 import type { TokenConfig } from '@/config/tokens'
 
 export interface UseTokenAllowanceParams {
@@ -11,7 +12,7 @@ export interface UseTokenAllowanceParams {
   /** Spender 地址（通常是 Router 地址） */
   spender?: Address
   /** 链 ID */
-  chainId?: number
+  chainId?: SupportedChainId
   /** 是否启用查询 */
   enabled?: boolean
 }
@@ -50,7 +51,8 @@ export function useTokenAllowance({
   chainId,
   enabled = true,
 }: UseTokenAllowanceParams): UseTokenAllowanceResult {
-  const publicClient = usePublicClient({ chainId: chainId as any })
+  const supportedChainId = toSupportedChainId(chainId)
+  const publicClient = usePublicClient({ chainId: supportedChainId })
 
   const isNativeToken = token?.isNative || token?.address === 'native'
 
@@ -61,12 +63,12 @@ export function useTokenAllowance({
     !spender ||
     isNativeToken ||
     enabled === false ||
-    !chainId
+    !supportedChainId
 
   const query = useQuery({
     queryKey: [
       'token-allowance',
-      chainId,
+      supportedChainId,
       token?.address,
       owner,
       spender,
@@ -94,7 +96,7 @@ export function useTokenAllowance({
     enabled:
       !shouldSkipQuery &&
       !!publicClient &&
-      !!chainId &&
+      !!supportedChainId &&
       !!token &&
       !!owner &&
       !!spender &&

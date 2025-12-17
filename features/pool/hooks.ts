@@ -1,11 +1,11 @@
 "use client"
 
-import { useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { useChainId, usePublicClient } from "wagmi"
 import { formatUnits, type Address } from "viem"
 import { uniswapV2PairAbi } from "@/lib/abi/uniswapV2Pair"
 import type { PoolConfig } from "@/config/pools"
+import { toSupportedChainId } from "@/config/chains"
 
 interface UsePoolOverviewParams {
   pool: PoolConfig | undefined
@@ -34,9 +34,9 @@ function toNumber(value: bigint, decimals: number): number {
 }
 
 export function usePoolOverview({ pool }: UsePoolOverviewParams): UsePoolOverviewResult {
-  const chainId = useChainId()
-  const targetChainId = pool?.chainId ?? chainId
-  const publicClient = usePublicClient({ chainId: targetChainId as any })
+  const chainId = toSupportedChainId(useChainId())
+  const targetChainId = toSupportedChainId(pool?.chainId ?? chainId)
+  const publicClient = usePublicClient({ chainId: targetChainId })
 
   const shouldSkip = !pool
 
@@ -48,15 +48,15 @@ export function usePoolOverview({ pool }: UsePoolOverviewParams): UsePoolOvervie
     queryFn: async () => {
       if (!pool || !publicClient) return undefined
 
-      const multicallResult = (await publicClient.multicall({
+      const multicallResult = await publicClient.multicall({
         allowFailure: true,
         contracts: [
           { address: pool.pairAddress, abi: uniswapV2PairAbi, functionName: "getReserves" } as const,
           { address: pool.pairAddress, abi: uniswapV2PairAbi, functionName: "totalSupply" } as const,
         ],
-      })) as any
+      })
 
-      const [reservesResult, totalSupplyResult] = multicallResult?.results ?? multicallResult ?? []
+      const [reservesResult, totalSupplyResult] = multicallResult ?? []
 
       if (
         !reservesResult ||
@@ -67,7 +67,7 @@ export function usePoolOverview({ pool }: UsePoolOverviewParams): UsePoolOvervie
         throw new Error("Failed to fetch pool overview")
       }
 
-      const [reserve0Raw, reserve1Raw] = reservesResult.result as [bigint, bigint, bigint]
+      const [reserve0Raw, reserve1Raw] = reservesResult.result as readonly [bigint, bigint, number]
       const totalSupply = totalSupplyResult.result as bigint
 
       const token0Amount = toNumber(reserve0Raw, pool.token0.decimals)
@@ -123,9 +123,9 @@ export function useUserLiquidity({
   pool,
   account,
 }: UseUserLiquidityParams): UseUserLiquidityResult {
-  const chainId = useChainId()
-  const targetChainId = pool?.chainId ?? chainId
-  const publicClient = usePublicClient({ chainId: targetChainId as any })
+  const chainId = toSupportedChainId(useChainId())
+  const targetChainId = toSupportedChainId(pool?.chainId ?? chainId)
+  const publicClient = usePublicClient({ chainId: targetChainId })
   const overview = usePoolOverview({ pool })
 
   const shouldSkip = !pool || !account

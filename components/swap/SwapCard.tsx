@@ -13,7 +13,13 @@ import { SwapSettingsDialog } from "./SwapSettingsDialog"
 import { RecentSwaps } from "./RecentSwaps"
 import { useTokenBalances } from "@/lib/hooks/useTokenBalances"
 import { getTokensByChainId } from "@/config/tokens"
-import { getDexChainConfig, PREFERRED_CHAIN_ID, SUPPORTED_CHAIN_IDS } from "@/config/chains"
+import {
+  getDexChainConfig,
+  PREFERRED_CHAIN_ID,
+  SUPPORTED_CHAIN_IDS,
+  toSupportedChainId,
+  type SupportedChainId,
+} from "@/config/chains"
 import { getExplorerTxUrl } from "@/lib/utils"
 import { formatUnits, parseUnits } from "viem"
 import {
@@ -38,7 +44,6 @@ import type { RecentSwap } from "@/features/swap/recentSwaps"
 
 const EMPTY_RECENT_SWAPS: RecentSwap[] = []
 import type { TokenConfig } from "@/config/tokens"
-type SupportedChainId = (typeof SUPPORTED_CHAIN_IDS)[number]
 
 export interface SwapCardProps {
   tokens?: Token[]
@@ -53,14 +58,14 @@ export function SwapCard({
   defaultToSymbol = "USDC",
   onReview,
 }: SwapCardProps) {
-  const chainIdFromWagmi = useChainId()
+  const chainIdFromWagmi = toSupportedChainId(useChainId())
   const { switchChain, isPending: isSwitchingChain } = useSwitchChain()
   const dexChainConfig = useMemo(() => getDexChainConfig(chainIdFromWagmi), [chainIdFromWagmi])
   const isSupportedChain = Boolean(dexChainConfig)
   const recommendedChain = getDexChainConfig(PREFERRED_CHAIN_ID)
 
   const tokenConfigs = useMemo(
-    () => (isSupportedChain ? getTokensByChainId(chainIdFromWagmi) : []),
+    () => (isSupportedChain && chainIdFromWagmi ? getTokensByChainId(chainIdFromWagmi) : []),
     [chainIdFromWagmi, isSupportedChain]
   )
   const tokens = useMemo(
@@ -125,7 +130,7 @@ export function SwapCard({
     toAmount,
     slippageBps,
     deadlineMinutes,
-    chainId,
+    chainId: formChainId,
     address,
     reviewParams,
     priceImpactPercent,
@@ -149,6 +154,7 @@ export function SwapCard({
 
   const fromTokenConfig = fromToken || null
   const toTokenConfig = toToken || null
+  const supportedFormChainId = toSupportedChainId(formChainId)
 
   const {
     allowance,
@@ -158,7 +164,7 @@ export function SwapCard({
     token: fromTokenConfig,
     owner: address,
     spender: routerAddress,
-    chainId,
+    chainId: supportedFormChainId,
     enabled: Boolean(
       fromTokenConfig && address && routerAddress && isConnected && isSupportedChain
     ),
@@ -172,7 +178,7 @@ export function SwapCard({
     token: fromTokenConfig,
     owner: address,
     spender: routerAddress,
-    chainId,
+    chainId: supportedFormChainId,
   })
 
   useEffect(() => {
@@ -211,7 +217,7 @@ export function SwapCard({
     amountOutMin,
     recipient: reviewParams?.recipient,
     deadlineMinutes,
-    chainId,
+    chainId: supportedFormChainId,
   })
 
   const pendingSwapIdRef = useRef<string | null>(null)
@@ -222,11 +228,13 @@ export function SwapCard({
   )
 
   const recentSwaps = useMemo(() => {
-    if (!chainId) return EMPTY_RECENT_SWAPS
+    if (!supportedFormChainId) return EMPTY_RECENT_SWAPS
     return allRecentSwaps.filter((item) =>
-      address ? item.chainId === chainId && item.account === address : item.chainId === chainId
+      address
+        ? item.chainId === supportedFormChainId && item.account === address
+        : item.chainId === supportedFormChainId
     )
-  }, [address, chainId, allRecentSwaps])
+  }, [address, allRecentSwaps, supportedFormChainId])
 
   const fromBalanceWei = useMemo(() => {
     if (!fromToken) return undefined
@@ -260,17 +268,17 @@ export function SwapCard({
   }, [swapStatus, swapTxHash])
 
   const explorerUrl = useMemo(() => {
-    if (swapSuccess && swapTxHash && chainId) {
-      return getExplorerTxUrl(chainId, swapTxHash)
+    if (swapSuccess && swapTxHash && supportedFormChainId) {
+      return getExplorerTxUrl(supportedFormChainId, swapTxHash)
     }
     return undefined
-  }, [swapSuccess, swapTxHash, chainId])
+  }, [supportedFormChainId, swapSuccess, swapTxHash])
 
   const currentError: SwapError = useMemo(() => {
     const isNativeFromToken = Boolean(fromTokenConfig?.isNative)
     return deriveSwapError({
       isConnected,
-      chainId,
+      chainId: supportedFormChainId,
       supportedChainIds: SUPPORTED_CHAIN_IDS,
       fromToken: fromTokenConfig,
       toToken: toTokenConfig,
@@ -288,7 +296,7 @@ export function SwapCard({
   }, [
     allowance,
     allowanceLoading,
-    chainId,
+    supportedFormChainId,
     fromAmount,
     fromBalanceWei,
     fromTokenConfig,
@@ -337,16 +345,16 @@ export function SwapCard({
   }, [onReview, reviewParams])
 
   const handleSwap = useCallback(async () => {
-    if (!reviewParams || !address || !chainId) {
+    if (!reviewParams || !address || !supportedFormChainId) {
       await swap()
       return
     }
 
-    const id = `${chainId}-${Date.now()}-${reviewParams.fromToken.symbol}-${reviewParams.toToken.symbol}`
+    const id = `${supportedFormChainId}-${Date.now()}-${reviewParams.fromToken.symbol}-${reviewParams.toToken.symbol}`
     pendingSwapIdRef.current = id
     addRecentSwap({
       id,
-      chainId,
+      chainId: supportedFormChainId,
       account: address,
       timestamp: Date.now(),
       txHash: undefined,
@@ -362,7 +370,7 @@ export function SwapCard({
     } catch (err) {
       console.error("Swap failed:", err)
     }
-  }, [address, chainId, reviewParams, swap])
+  }, [address, reviewParams, supportedFormChainId, swap])
 
   let actionLabel = "Swap"
   let actionDisabled = false
@@ -523,7 +531,7 @@ export function SwapCard({
       <div className="mt-4">
         <RecentSwaps
           items={recentSwaps.slice(0, 8)}
-          chainId={chainId}
+          chainId={supportedFormChainId}
           explorerBaseUrl={dexChainConfig?.explorerBaseUrl}
         />
       </div>

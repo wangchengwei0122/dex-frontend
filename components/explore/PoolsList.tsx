@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { formatUnits } from "viem"
 import { Search } from "lucide-react"
 import type { PoolConfig } from "@/config/pools"
+import { toSupportedChainId, type SupportedChainId } from "@/config/chains"
 import type { UserPoolPosition } from "@/features/swap/engine/types"
 import { usePairReserves } from "@/features/swap/engine"
 import { AppPanel } from "@/components/app/app-panel"
@@ -14,7 +15,7 @@ import { cn } from "@/lib/utils"
 export interface PoolsListProps {
   pools: PoolConfig[]
   userPositions?: UserPoolPosition[]
-  chainId?: number
+  chainId?: SupportedChainId
   isConnected?: boolean
 }
 
@@ -36,10 +37,11 @@ function formatMidPrice(value?: number) {
 }
 
 function PoolRow({ pool, position, onSelect, showConnectHint }: PoolRowProps) {
+  const supportedChainId = toSupportedChainId(pool.chainId)
   const { reserveIn, reserveOut, loading } = usePairReserves({
     fromToken: pool.token0,
     toToken: pool.token1,
-    chainId: pool.chainId,
+    chainId: supportedChainId,
   })
 
   const reserveStats = useMemo(() => {
@@ -190,7 +192,7 @@ export function PoolsList({ pools, userPositions, chainId, isConnected }: PoolsL
       const params = new URLSearchParams()
       params.set("from", pool.token0.symbol)
       params.set("to", pool.token1.symbol)
-      const targetChainId = pool.chainId ?? chainId
+      const targetChainId = toSupportedChainId(pool.chainId ?? chainId)
       if (targetChainId) {
         params.set("chainId", String(targetChainId))
       }

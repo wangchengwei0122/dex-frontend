@@ -1,5 +1,7 @@
 import type { Address } from "viem"
 
+export type SupportedChainId = 1 | 11155111 | 31337
+
 export interface DexChainConfig {
   chainId: number
   name: string
@@ -43,4 +45,9 @@ export function getExplorerTxUrl(chainId: number, txHash: `0x${string}`): string
   const chainConfig = getDexChainConfig(chainId)
   if (!chainConfig) return undefined
   return `${chainConfig.explorerBaseUrl}/tx/${txHash}`
+}
+
+export function toSupportedChainId(chainId?: number): SupportedChainId | undefined {
+  if (chainId === 1 || chainId === 11155111 || chainId === 31337) return chainId
+  return undefined
 }
