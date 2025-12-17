@@ -1,8 +1,8 @@
 # dex-frontend
 
 ## 1. Project Overview
-- Uniswap-style DEX frontend for demos and interviews; focuses on UX and protocol literacy rather than a full backend.
-- Interview showcase project targeting Web3 Frontend / Senior Frontend roles.
+- Uniswap-style DEX frontend for demos and portfolio presentation; focuses on UX and protocol literacy rather than a full backend.
+- Highlights skills relevant to Web3 Frontend / Senior Frontend roles.
 
 ## 2. Why I Built This
 - To demonstrate applied understanding of DEX mechanics (Uniswap V2-style flows) and Web3 UX patterns.
@@ -49,5 +49,5 @@ pnpm dev
 ```
 
 ## 8. Disclaimer
-- Non-production; built for learning, interviews, and portfolio demonstration.
+- Non-production; built for learning and portfolio demonstration.
 - Uses testnets by default (Sepolia); do not treat as financial software.
