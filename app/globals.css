@@ -84,89 +84,89 @@
    * =========================== */
 
   /* Brand · Black 系列（主背景） */
-  --black-900: #0A0A0C; /* DEX 主背景 / 深色 Panel */
-  --black-800: #0D0F12; /* 悬浮/次级背景 */
+  --black-900: #0a0a0c; /* DEX 主背景 / 深色 Panel */
+  --black-800: #0d0f12; /* 悬浮/次级背景 */
   --black-700: #111316; /* 更浅一层背景 */
 
   /* Brand · Gold 系列（品牌金色） */
-  --gold: #C9A227; /* 主品牌金色 */
+  --gold: #c9a227; /* 主品牌金色 */
   --gold-soft: rgba(201, 162, 39, 0.35); /* hover / 浅金色填充 */
-  --gold-border-soft: rgba(201, 162, 39, 0.30); /* 卡片 / 面板普通边框 */
+  --gold-border-soft: rgba(201, 162, 39, 0.3); /* 卡片 / 面板普通边框 */
   --gold-border-strong: rgba(201, 162, 39, 0.65); /* 主按钮高亮边框 */
-  --gold-divider: rgba(201, 162, 39, 0.40); /* Divider 线条 */
+  --gold-divider: rgba(201, 162, 39, 0.4); /* Divider 线条 */
   --gold-glow-color: rgba(201, 162, 39, 0.28); /* Glow 颜色 */
   --gold-glow-soft-shadow: 0 0 12px rgba(201, 162, 39, 0.15); /* Badge 等小光晕 */
   --gold-glow-shadow: 0 0 32px rgba(201, 162, 39, 0.28); /* 主按钮大光晕 */
 
   /* 兼容组件里已经用到的变量名 */
   --app-gold: var(--gold);
-  --app-gold-hover: #D4A017; /* primary hover 边框/文字颜色 */
+  --app-gold-hover: #d4a017; /* primary hover 边框/文字颜色 */
 
   /* Neutral / Gray 系列 */
-  --gray-50:  #F9FAFB;
-  --gray-300: #D4D4D8;
-  --gray-500: #71717A;
-  --gray-700: #3F3F46;
-  --gray-900: #18181B;
+  --gray-50: #f9fafb;
+  --gray-300: #d4d4d8;
+  --gray-500: #71717a;
+  --gray-700: #3f3f46;
+  --gray-900: #18181b;
 
   /* Semantic Colors（语义色） */
 
   /* Success (emerald 系) */
-  --success: #22C55E; /* 主成功色，可用于文字/图标 */
-  --success-bg-soft: #ECFDF3; /* Badge / Tag 背景 */
-  --success-border: #A7F3D0;
+  --success: #22c55e; /* 主成功色，可用于文字/图标 */
+  --success-bg-soft: #ecfdf3; /* Badge / Tag 背景 */
+  --success-border: #a7f3d0;
   --success-text: #047857;
 
   /* Warning (amber 系) */
-  --warning: #F59E0B;
-  --warning-bg-soft: #FFFBEB;
-  --warning-border: #FDE68A;
-  --warning-text: #B45309;
+  --warning: #f59e0b;
+  --warning-bg-soft: #fffbeb;
+  --warning-border: #fde68a;
+  --warning-text: #b45309;
 
   /* Error / Destructive (rose 系) */
   /* 用于 Button.danger / Input.error / Badge.error */
-  --error: #E11D48; /* 主错误红（接近 rose-600） */
+  --error: #e11d48; /* 主错误红（接近 rose-600） */
   --error-bg-soft: rgba(248, 113, 113, 0.08); /* 需要更亮背景时可用 */
   --error-input-bg: rgba(254, 242, 242, 0.7); /* Input 错误背景 */
-  --error-border: #FB7185;  /* 边框色（对应 rose-400） */
-  --error-text: #FEE2E2;    /* 暗背景上的错误文字 */
+  --error-border: #fb7185; /* 边框色（对应 rose-400） */
+  --error-text: #fee2e2; /* 暗背景上的错误文字 */
   --error-glow: 0 0 26px rgba(248, 113, 113, 0.45); /* danger 按钮光晕 */
 
   /* Input Tokens（输入框相关） */
   --input-bg: rgba(255, 255, 255, 0.06); /* 对应 bg-white/6 的玻璃背景 */
-  --input-border: #E4E4E7;              /* zinc-200 */
+  --input-border: #e4e4e7; /* zinc-200 */
   --input-border-hover: var(--gold-border-soft);
-  --input-border-focus: #C9A227;        /* 纯金色边框 */
-  --input-placeholder: #A1A1AA;         /* zinc-400 */
-  --input-text: #E5E5E5;                /* 深色背景下的文字颜色 */
-  --input-disabled-bg: rgba(255, 255, 255, 0.60);
-  --input-disabled-text: #A1A1AA;
-  --input-disabled-border: rgba(228, 228, 231, 0.70); /* zinc-200/70 */
+  --input-border-focus: #c9a227; /* 纯金色边框 */
+  --input-placeholder: #a1a1aa; /* zinc-400 */
+  --input-text: #e5e5e5; /* 深色背景下的文字颜色 */
+  --input-disabled-bg: rgba(255, 255, 255, 0.6);
+  --input-disabled-text: #a1a1aa;
+  --input-disabled-border: rgba(228, 228, 231, 0.7); /* zinc-200/70 */
 
   /* Card / Panel Tokens */
   /* Card（亮色玻璃卡片） */
-  --card-bg: rgba(255, 255, 255, 0.90);  /* white/90 */
+  --card-bg: rgba(255, 255, 255, 0.9); /* white/90 */
   --card-bg-flat: rgba(255, 255, 255, 0.75); /* white/75 */
-  --card-border: rgba(245, 199, 106, 0.24);  /* #f5c76a3d */
+  --card-border: rgba(245, 199, 106, 0.24); /* #f5c76a3d */
   --card-shadow-default: 0 8px 32px rgba(0, 0, 0, 0.08);
   --card-shadow-elevated: 0 12px 32px rgba(0, 0, 0, 0.12);
 
   /* Panel（深色面板） */
-  --panel-bg-dark: #0A0A0C;
-  --panel-border-dark: rgba(201, 162, 39, 0.30);
+  --panel-bg-dark: #0a0a0c;
+  --panel-border-dark: rgba(201, 162, 39, 0.3);
   --panel-ring-dark: rgba(201, 162, 39, 0.12);
-  --panel-shadow-dark: 0 18px 45px rgba(0, 0, 0, 0.60);
+  --panel-shadow-dark: 0 18px 45px rgba(0, 0, 0, 0.6);
   --panel-shadow-elevated: 0 22px 55px rgba(0, 0, 0, 0.72);
 
   /* Light / Glass Panel */
-  --panel-bg-light: rgba(255, 255, 255, 0.90);
-  --panel-bg-glass: rgba(255, 255, 255, 0.80);
-  --panel-bg-subtle: rgba(255, 255, 255, 0.70);
+  --panel-bg-light: rgba(255, 255, 255, 0.9);
+  --panel-bg-glass: rgba(255, 255, 255, 0.8);
+  --panel-bg-subtle: rgba(255, 255, 255, 0.7);
   --panel-border-light: rgba(245, 199, 106, 0.24);
 
   /* Typography / Label */
-  --label-text: #6B7280;    /* 接近 text-zinc-500 */
-  --label-required: #FBBF24; /* amber-400 星号 */
+  --label-text: #6b7280; /* 接近 text-zinc-500 */
+  --label-required: #fbbf24; /* amber-400 星号 */
 
   /* Layout / 背景 */
   --page-bg: var(--black-900); /* 整页背景（如需可在 body/background 使用） */
@@ -224,10 +224,10 @@
 
   /* ConnectButton 基础样式 - 更小更紧凑 */
   [data-rk] button[data-testid] {
-    background-color: #0A0A0C !important;
+    background-color: #0a0a0c !important;
     border: 1px solid rgba(201, 162, 39, 0.25) !important;
     border-radius: 12px !important;
-    color: #C9A227 !important;
+    color: #c9a227 !important;
     padding: 6px 12px !important;
     height: auto !important;
     min-height: auto !important;
@@ -245,7 +245,7 @@
 
   /* ConnectButton 文字颜色和大小 */
   [data-rk] button[data-testid] span {
-    color: #C9A227 !important;
+    color: #c9a227 !important;
     font-size: 13px !important;
     font-weight: 500 !important;
   }
@@ -264,15 +264,9 @@
     min-height: auto !important;
   }
 
-  /* 图标大小 */
-  [data-rk] button[data-testid] svg {
-    width: 14px !important;
-    height: 14px !important;
-  }
-
   /* 模态框背景 */
   [data-rk] [role="dialog"] {
-    background-color: #0A0A0C !important;
+    background-color: #0a0a0c !important;
   }
 
   /* 钱包选项背景 */
@@ -307,31 +301,16 @@
     transform: translate3d(0, 0, 0) rotate(var(--rotate-from)) scale(1);
   }
   25% {
-    transform: translate3d(
-      calc(var(--move-x) * 0.4),
-      calc(var(--move-y) * 0.3),
-      0
-    )
-    rotate(calc((var(--rotate-from) + var(--rotate-to)) / 2))
-    scale(1.01);
+    transform: translate3d(calc(var(--move-x) * 0.4), calc(var(--move-y) * 0.3), 0)
+      rotate(calc((var(--rotate-from) + var(--rotate-to)) / 2)) scale(1.01);
   }
   50% {
-    transform: translate3d(
-      calc(var(--move-x)),
-      calc(var(--move-y)),
-      0
-    )
-    rotate(var(--rotate-to))
-    scale(1.02);
+    transform: translate3d(calc(var(--move-x)), calc(var(--move-y)), 0) rotate(var(--rotate-to))
+      scale(1.02);
   }
   75% {
-    transform: translate3d(
-      calc(var(--move-x) * 0.2),
-      calc(var(--move-y) * 0.8),
-      0
-    )
-    rotate(calc((var(--rotate-from) + var(--rotate-to)) / 2))
-    scale(1.01);
+    transform: translate3d(calc(var(--move-x) * 0.2), calc(var(--move-y) * 0.8), 0)
+      rotate(calc((var(--rotate-from) + var(--rotate-to)) / 2)) scale(1.01);
   }
   100% {
     transform: translate3d(0, 0, 0) rotate(var(--rotate-from)) scale(1);

@@ -71,7 +71,7 @@ const AppNavbar = React.forwardRef<HTMLElement, AppNavbarProps>(({ className, ..
 
         {/* Connect Wallet Button - 紧凑样式 */}
         <div className="flex items-center shrink-0">
-          <ConnectButton />
+          <ConnectButton accountStatus="address" showBalance={false} />
         </div>
       </div>
     </nav>
