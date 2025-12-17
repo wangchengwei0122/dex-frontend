@@ -39,19 +39,24 @@ function formatTokenAmount(value: bigint, token: TokenConfig): string {
 }
 
 export function useUserPools({ chainId, account }: UseUserPoolsParams): UseUserPoolsResult {
-  const publicClient = usePublicClient({ chainId: chainId as any })
   const dexChainConfig = getDexChainConfig(chainId)
+  const shouldQuery = Boolean(chainId && account && dexChainConfig)
 
-  const pools = useMemo(() => (chainId ? getPoolsByChainId(chainId) : []), [chainId])
+  const publicClient = usePublicClient({ chainId })
 
-  const enabled = Boolean(account && chainId && publicClient && dexChainConfig && pools.length)
+  const pools = useMemo(
+    () => (shouldQuery && chainId ? getPoolsByChainId(chainId) : []),
+    [chainId, shouldQuery]
+  )
 
-  const query = useQuery({
+  const enabled = Boolean(shouldQuery && publicClient && pools.length)
+
+  const query = useQuery<UserPoolPosition[]>({
     queryKey: ["user-pools", chainId, account, pools.map((pool) => pool.id).join(",")],
     enabled,
     staleTime: 15_000,
     refetchInterval: 30_000,
-    queryFn: async () => {
+    queryFn: async (): Promise<UserPoolPosition[]> => {
       if (!publicClient || !account || !chainId || !pools.length) return []
 
       const contracts = pools.flatMap((pool) => [
@@ -67,11 +72,10 @@ export function useUserPools({ chainId, account }: UseUserPoolsParams): UseUserP
         { address: pool.pairAddress, abi: uniswapV2PairAbi, functionName: "token1" } as const,
       ])
 
-      const multicallResult = (await publicClient.multicall({
+      const { results } = await publicClient.multicall({
         allowFailure: true,
         contracts,
-      })) as any
-      const results = multicallResult?.results ?? multicallResult ?? []
+      })
 
       const positions: UserPoolPosition[] = []
 
@@ -158,9 +162,9 @@ export function useUserPools({ chainId, account }: UseUserPoolsParams): UseUserP
   })
 
   return {
-    positions: query.data || [],
-    isLoading: query.isLoading || query.isFetching,
-    isError: Boolean(query.error),
-    error: (query.error as Error) || null,
+    positions: shouldQuery ? query.data ?? [] : [],
+    isLoading: shouldQuery ? query.isLoading || query.isFetching : false,
+    isError: shouldQuery ? Boolean(query.error) : false,
+    error: shouldQuery && query.error instanceof Error ? query.error : null,
   }
 }

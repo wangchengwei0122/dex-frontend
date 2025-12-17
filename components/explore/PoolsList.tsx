@@ -42,27 +42,46 @@ function PoolRow({ pool, position, onSelect, showConnectHint }: PoolRowProps) {
     chainId: pool.chainId,
   })
 
-  const prices = useMemo(() => {
-    if (!reserveIn || !reserveOut) return undefined
+  const reserveStats = useMemo(() => {
+    if (!reserveIn || !reserveOut) return null
 
-    const r0 = Number(formatUnits(reserveIn, pool.token0.decimals))
-    const r1 = Number(formatUnits(reserveOut, pool.token1.decimals))
-    if (!Number.isFinite(r0) || !Number.isFinite(r1) || r0 === 0 || r1 === 0) {
-      return undefined
+    const amount0 = Number(formatUnits(reserveIn, pool.token0.decimals))
+    const amount1 = Number(formatUnits(reserveOut, pool.token1.decimals))
+
+    if (!Number.isFinite(amount0) || !Number.isFinite(amount1) || amount0 <= 0 || amount1 <= 0) {
+      return null
     }
 
     return {
-      price0: r1 / r0,
-      price1: r0 / r1,
+      amount0,
+      amount1,
+      price0: amount1 / amount0,
+      price1: amount0 / amount1,
+      pseudoTvl: amount0 + amount1,
     }
   }, [pool.token0.decimals, pool.token1.decimals, reserveIn, reserveOut])
 
   const priceText =
-    prices &&
-    `1 ${pool.token0.symbol} ≈ ${formatMidPrice(prices.price0) ?? "—"} ${pool.token1.symbol}`
+    reserveStats &&
+    `1 ${pool.token0.symbol} ≈ ${formatMidPrice(reserveStats.price0) ?? "—"} ${pool.token1.symbol}`
   const reverseText =
-    prices &&
-    `1 ${pool.token1.symbol} ≈ ${formatMidPrice(prices.price1) ?? "—"} ${pool.token0.symbol}`
+    reserveStats &&
+    `1 ${pool.token1.symbol} ≈ ${formatMidPrice(reserveStats.price1) ?? "—"} ${pool.token0.symbol}`
+
+  const liquiditySummary = useMemo(() => {
+    if (!reserveStats) return null
+
+    return {
+      headline: `Liquidity ~ ${reserveStats.pseudoTvl.toLocaleString(undefined, {
+        maximumFractionDigits: 2,
+      })} units`,
+      breakdown: `${reserveStats.amount0.toLocaleString(undefined, { maximumFractionDigits: 4 })} ${
+        pool.token0.symbol
+      } / ${reserveStats.amount1.toLocaleString(undefined, { maximumFractionDigits: 4 })} ${
+        pool.token1.symbol
+      }`,
+    }
+  }, [pool.token0.symbol, pool.token1.symbol, reserveStats])
 
   const liquidityText = showConnectHint
     ? "Connect wallet"
@@ -106,9 +125,27 @@ function PoolRow({ pool, position, onSelect, showConnectHint }: PoolRowProps) {
         )}
       </div>
 
-      <div className="text-sm text-zinc-300">—</div>
+      <div className="text-sm text-zinc-300 leading-tight">
+        {loading ? (
+          <span className="text-zinc-500">Loading TVL...</span>
+        ) : liquiditySummary ? (
+          <>
+            <div>{liquiditySummary.headline}</div>
+            <div className="text-xs text-zinc-500">{liquiditySummary.breakdown}</div>
+          </>
+        ) : (
+          <span className="text-zinc-500">—</span>
+        )}
+      </div>
 
-      <div className="text-right text-sm text-amber-50">{liquidityText}</div>
+      <div
+        className={cn(
+          "text-right text-sm",
+          showConnectHint ? "text-zinc-400" : position ? "text-amber-100" : "text-amber-50"
+        )}
+      >
+        {liquidityText}
+      </div>
     </button>
   )
 }

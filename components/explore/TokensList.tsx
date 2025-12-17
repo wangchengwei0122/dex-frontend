@@ -9,6 +9,29 @@ import { AppInput } from "@/components/app/app-input"
 import { cn } from "@/lib/utils"
 import { TokenIcon } from "@/components/shared/token-icon"
 
+const tokenMarketMock: Record<string, { volume24hUsd: number; change24hPct: number }> = {
+  ETH: { volume24hUsd: 1_200_000_000, change24hPct: 2.3 },
+  WETH: { volume24hUsd: 850_000_000, change24hPct: 1.1 },
+  USDC: { volume24hUsd: 640_000_000, change24hPct: 0.4 },
+  USDT: { volume24hUsd: 710_000_000, change24hPct: -0.6 },
+  WBTC: { volume24hUsd: 320_000_000, change24hPct: 3.8 },
+}
+
+function formatUsd(value?: number): string {
+  if (value === undefined || !Number.isFinite(value)) return "—"
+  const absolute = Math.abs(value)
+  const sign = value < 0 ? "-" : ""
+
+  const formatWithSuffix = (val: number, suffix: string) =>
+    `${sign}$${val.toFixed(val >= 10 ? 0 : 1).replace(/\.0$/, "")}${suffix}`
+
+  if (absolute >= 1_000_000_000) return formatWithSuffix(absolute / 1_000_000_000, "B")
+  if (absolute >= 1_000_000) return formatWithSuffix(absolute / 1_000_000, "M")
+  if (absolute >= 1_000) return formatWithSuffix(absolute / 1_000, "K")
+
+  return `${sign}$${absolute.toLocaleString(undefined, { maximumFractionDigits: 2 })}`
+}
+
 export interface TokensListProps {
   tokens: TokenConfig[]
   chainId?: number
@@ -20,6 +43,19 @@ interface TokenRowProps {
 }
 
 function TokenRow({ token, onSelect }: TokenRowProps) {
+  const market = useMemo(() => tokenMarketMock[token.symbol], [token.symbol])
+
+  const volumeLabel = useMemo(
+    () => (market ? `24h Vol ${formatUsd(market.volume24hUsd)}` : "24h Vol —"),
+    [market]
+  )
+
+  const changeLabel = useMemo(() => {
+    if (!market) return "Change —"
+    const sign = market.change24hPct > 0 ? "+" : ""
+    return `Change ${sign}${market.change24hPct.toFixed(2)}%`
+  }, [market])
+
   return (
     <button
       type="button"
@@ -45,9 +81,22 @@ function TokenRow({ token, onSelect }: TokenRowProps) {
 
       <div className="text-sm font-semibold text-amber-100">{token.symbol}</div>
 
-      <div className="text-right">
-        <div className="text-sm text-zinc-300">—</div>
-        <div className="text-xs text-zinc-500">24h Vol —</div>
+      <div className="text-right leading-tight">
+        <div className={cn("text-sm", market ? "text-amber-100" : "text-zinc-300")}>
+          {volumeLabel}
+        </div>
+        <div
+          className={cn(
+            "text-xs",
+            !market
+              ? "text-zinc-500"
+              : market.change24hPct >= 0
+                ? "text-emerald-300"
+                : "text-red-300"
+          )}
+        >
+          {changeLabel}
+        </div>
       </div>
     </button>
   )

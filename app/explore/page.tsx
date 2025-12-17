@@ -26,9 +26,11 @@ export default function ExplorePage() {
   const tokens = getTokensByChainId(dataChainId)
   const pools = getPoolsByChainId(dataChainId)
 
+  const shouldLoadUserPools = Boolean(dexChainConfig && address)
+
   const { positions } = useUserPools({
-    chainId: dexChainConfig ? chainId : undefined,
-    account: address,
+    chainId: shouldLoadUserPools ? chainId : undefined,
+    account: shouldLoadUserPools ? address : undefined,
   })
 
   return (
