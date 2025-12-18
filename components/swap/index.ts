@@ -5,6 +5,7 @@ export { SwapFooter } from './SwapFooter';
 export { SwapActionButton } from './SwapActionButton';
 export { TokenSelectDialog } from './TokenSelectDialog';
 export { SwapSettingsDialog } from './SwapSettingsDialog';
+export { SwapReviewModal } from './SwapReviewModal';
 export { RecentSwaps } from './RecentSwaps';
 export { TokenAmountInput } from './TokenAmountInput';
 export type {

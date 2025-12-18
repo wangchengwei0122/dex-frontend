@@ -13,10 +13,16 @@ export interface UseSwapParams {
   toToken?: TokenConfig | null
   /** 输入金额（人类可读字符串，例如 "0.1"） */
   amountIn: string
+  /** 输入金额（bigint，优先使用） */
+  amountInWei?: bigint
   /** 最小输出金额（人类可读字符串，例如 "352.45"） */
   amountOutMin: string
+  /** 最小输出金额（bigint，优先使用） */
+  amountOutMinWei?: bigint
   /** 接收地址（默认用当前用户钱包地址） */
   recipient?: Address
+  /** 交易截止时间（Unix 秒级时间戳，优先使用） */
+  deadlineTimestamp?: number
   /** 交易截止时间（分钟），默认 20 分钟 */
   deadlineMinutes?: number
   /** 链 ID */
@@ -68,8 +74,11 @@ export function useSwap({
   fromToken,
   toToken,
   amountIn,
+  amountInWei: amountInWeiOverride,
   amountOutMin,
+  amountOutMinWei: amountOutMinWeiOverride,
   recipient,
+  deadlineTimestamp,
   deadlineMinutes = 20,
   chainId,
 }: UseSwapParams): UseSwapResult {
@@ -85,7 +94,8 @@ export function useSwap({
 
   // 计算数量（bigint）
   const amountInWei = (() => {
-    if (!fromToken || !amountIn || amountIn === '0') return BigInt(0)
+    if (amountInWeiOverride !== undefined) return amountInWeiOverride
+    if (!fromToken || !amountIn || amountIn === "0") return BigInt(0)
     try {
       const amountNum = Number(amountIn)
       if (isNaN(amountNum) || amountNum <= 0) return BigInt(0)
@@ -96,7 +106,8 @@ export function useSwap({
   })()
 
   const amountOutMinWei = (() => {
-    if (!toToken || !amountOutMin || amountOutMin === '0') return BigInt(0)
+    if (amountOutMinWeiOverride !== undefined) return amountOutMinWeiOverride
+    if (!toToken || !amountOutMin || amountOutMin === "0") return BigInt(0)
     try {
       const amountNum = Number(amountOutMin)
       if (isNaN(amountNum) || amountNum <= 0) return BigInt(0)
@@ -115,7 +126,8 @@ export function useSwap({
   })()
 
   // 计算 deadline（Unix 时间戳，秒）
-  const deadline = Math.floor(Date.now() / 1000) + deadlineMinutes * 60
+  const deadline =
+    deadlineTimestamp ?? Math.floor(Date.now() / 1000) + deadlineMinutes * 60
 
   // 前置校验：是否应该启用模拟和交易
   const shouldEnable = Boolean(

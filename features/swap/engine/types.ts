@@ -18,7 +18,10 @@ export interface SwapReviewParams {
   path: Address[]
   amountIn: bigint
   amountOutMin: bigint
+  /** Unix timestamp (seconds) used by router */
   deadline: number
+  /** Display-only deadline in minutes */
+  deadlineMinutes: number
   humanAmountIn: string
   humanAmountOut: string
   humanAmountOutMin: string

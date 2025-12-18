@@ -11,6 +11,7 @@ import { SwapActionButton } from "./SwapActionButton"
 import { TokenSelectDialog } from "./TokenSelectDialog"
 import { SwapSettingsDialog } from "./SwapSettingsDialog"
 import { RecentSwaps } from "./RecentSwaps"
+import { SwapReviewModal } from "./SwapReviewModal"
 import { useTokenBalances } from "@/lib/hooks/useTokenBalances"
 import { getTokensByChainId } from "@/config/tokens"
 import {
@@ -122,6 +123,10 @@ export function SwapCard({
   const [tokenDialogOpen, setTokenDialogOpen] = useState(false)
   const [tokenDialogSide, setTokenDialogSide] = useState<Side | null>(null)
   const [settingsDialogOpen, setSettingsDialogOpen] = useState(false)
+  const [reviewModalOpen, setReviewModalOpen] = useState(false)
+  const [confirmedReviewParams, setConfirmedReviewParams] = useState<SwapReviewParams | null>(null)
+  const [confirmedPriceImpact, setConfirmedPriceImpact] = useState<number | undefined>()
+  const [pendingSwapExecution, setPendingSwapExecution] = useState(false)
 
   const {
     fromToken,
@@ -129,7 +134,6 @@ export function SwapCard({
     fromAmount,
     toAmount,
     slippageBps,
-    deadlineMinutes,
     chainId: formChainId,
     address,
     reviewParams,
@@ -200,9 +204,12 @@ export function SwapCard({
   }, [fromAmount, fromToken, reviewParams?.amountIn])
 
   const amountOutMin = useMemo(() => {
-    if (!reviewParams) return "0"
-    return formatUnits(reviewParams.amountOutMin, reviewParams.toToken.decimals)
-  }, [reviewParams])
+    if (!confirmedReviewParams) return "0"
+    return formatUnits(
+      confirmedReviewParams.amountOutMin,
+      confirmedReviewParams.toToken.decimals
+    )
+  }, [confirmedReviewParams])
 
   const {
     swap,
@@ -211,12 +218,14 @@ export function SwapCard({
     txHash: swapTxHash,
     error: swapErrorObj,
   } = useSwap({
-    fromToken: fromTokenConfig,
-    toToken: toTokenConfig,
-    amountIn: reviewParams?.humanAmountIn ?? "",
+    fromToken: confirmedReviewParams?.fromToken ?? fromTokenConfig,
+    toToken: confirmedReviewParams?.toToken ?? toTokenConfig,
+    amountIn: confirmedReviewParams?.humanAmountIn ?? "",
+    amountInWei: confirmedReviewParams?.amountIn,
     amountOutMin,
-    recipient: reviewParams?.recipient,
-    deadlineMinutes,
+    amountOutMinWei: confirmedReviewParams?.amountOutMin,
+    recipient: confirmedReviewParams?.recipient,
+    deadlineTimestamp: confirmedReviewParams?.deadline,
     chainId: supportedFormChainId,
   })
 
@@ -340,42 +349,59 @@ export function SwapCard({
   const handleReview = useCallback(() => {
     if (!reviewParams) return
 
-    console.log("Swap Review Params:", reviewParams)
+    // Freeze quote for review to avoid race conditions with later quote updates.
+    setConfirmedReviewParams(reviewParams)
+    setConfirmedPriceImpact(priceImpactPercent)
     onReview?.(reviewParams)
-  }, [onReview, reviewParams])
 
-  const handleSwap = useCallback(async () => {
-    if (!reviewParams || !address || !supportedFormChainId) {
-      await swap()
-      return
+    if (settings.oneClickEnabled) {
+      setPendingSwapExecution(true)
+    } else {
+      setReviewModalOpen(true)
     }
+  }, [onReview, priceImpactPercent, reviewParams, settings.oneClickEnabled])
 
-    const id = `${supportedFormChainId}-${Date.now()}-${reviewParams.fromToken.symbol}-${reviewParams.toToken.symbol}`
-    pendingSwapIdRef.current = id
-    addRecentSwap({
-      id,
-      chainId: supportedFormChainId,
-      account: address,
-      timestamp: Date.now(),
-      txHash: undefined,
-      fromTokenSymbol: reviewParams.fromToken.symbol,
-      toTokenSymbol: reviewParams.toToken.symbol,
-      fromAmount: reviewParams.humanAmountIn,
-      toAmount: reviewParams.humanAmountOut,
-      status: "pending",
-    })
+  const handleSwap = useCallback(
+    async (params: SwapReviewParams) => {
+      if (!address || !supportedFormChainId) {
+        await swap()
+        return
+      }
 
-    try {
-      await swap()
-    } catch (err) {
-      console.error("Swap failed:", err)
-    }
-  }, [address, reviewParams, supportedFormChainId, swap])
+      const id = `${supportedFormChainId}-${Date.now()}-${params.fromToken.symbol}-${params.toToken.symbol}`
+      pendingSwapIdRef.current = id
+      addRecentSwap({
+        id,
+        chainId: supportedFormChainId,
+        account: address,
+        timestamp: Date.now(),
+        txHash: undefined,
+        fromTokenSymbol: params.fromToken.symbol,
+        toTokenSymbol: params.toToken.symbol,
+        fromAmount: params.humanAmountIn,
+        toAmount: params.humanAmountOut,
+        status: "pending",
+      })
 
-  let actionLabel = "Swap"
+      try {
+        await swap()
+      } catch (err) {
+        console.error("Swap failed:", err)
+      }
+    },
+    [address, supportedFormChainId, swap]
+  )
+
+  useEffect(() => {
+    if (!pendingSwapExecution || !confirmedReviewParams) return
+    setPendingSwapExecution(false)
+    void handleSwap(confirmedReviewParams)
+  }, [confirmedReviewParams, handleSwap, pendingSwapExecution])
+
+  let actionLabel = settings.oneClickEnabled ? "Swap" : "Review"
   let actionDisabled = false
   let actionLoading = false
-  let actionHandler: () => void = fromTokenConfig?.isNative ? handleReview : handleSwap
+  let actionHandler: () => void = handleReview
 
   if (!isConnected) {
     actionLabel = "Connect Wallet"
@@ -552,6 +578,20 @@ export function SwapCard({
         settings={settings}
         onChange={setSettings}
         onClose={() => setSettingsDialogOpen(false)}
+      />
+
+      <SwapReviewModal
+        open={reviewModalOpen}
+        params={confirmedReviewParams}
+        priceImpactPercent={confirmedPriceImpact}
+        deadlineMinutes={confirmedReviewParams?.deadlineMinutes}
+        isSubmitting={swapStatus === "preparing" || swapStatus === "pending"}
+        onClose={() => setReviewModalOpen(false)}
+        onConfirm={() => {
+          if (!confirmedReviewParams) return
+          setReviewModalOpen(false)
+          void handleSwap(confirmedReviewParams)
+        }}
       />
     </>
   )

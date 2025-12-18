@@ -28,7 +28,7 @@ const AppNavbar = React.forwardRef<HTMLElement, AppNavbarProps>(({ className, ..
       )}
       {...props}
     >
-      <div className="max-w-screen-xl mx-auto px-4 h-full flex items-center gap-8">
+      <div className="max-w-7xl mx-auto px-4 h-full flex items-center gap-8">
         {/* Logo */}
         <Link
           href="/"

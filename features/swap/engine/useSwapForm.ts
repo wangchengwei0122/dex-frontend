@@ -215,7 +215,9 @@ export function useSwapForm(params?: UseSwapFormParams): UseSwapFormResult {
       return null
     }
 
-    const deadline = settings.deadlineMinutes * 60
+    // Router expects a Unix timestamp; freeze relative deadline into absolute time.
+    const deadlineSeconds = settings.deadlineMinutes * 60
+    const deadline = Math.floor(Date.now() / 1000) + deadlineSeconds
     const fromAddress = (fromToken.isNative ? fromToken.wrappedAddress : fromToken.address) as
       | Address
       | undefined
@@ -235,6 +237,7 @@ export function useSwapForm(params?: UseSwapFormParams): UseSwapFormResult {
       amountIn: amountInParsed,
       amountOutMin: amountOutMinWei,
       deadline,
+      deadlineMinutes: settings.deadlineMinutes,
       humanAmountIn: fromAmount,
       humanAmountOut: amountOutFormatted || toAmount,
       humanAmountOutMin: amountOutMinFormatted || "",
