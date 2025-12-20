@@ -205,10 +205,7 @@ export function SwapCard({
 
   const amountOutMin = useMemo(() => {
     if (!confirmedReviewParams) return "0"
-    return formatUnits(
-      confirmedReviewParams.amountOutMin,
-      confirmedReviewParams.toToken.decimals
-    )
+    return formatUnits(confirmedReviewParams.amountOutMin, confirmedReviewParams.toToken.decimals)
   }, [confirmedReviewParams])
 
   const {
@@ -554,13 +551,15 @@ export function SwapCard({
         </div>
       </AppPanel>
 
-      <div className="mt-4">
-        <RecentSwaps
-          items={recentSwaps.slice(0, 8)}
-          chainId={supportedFormChainId}
-          explorerBaseUrl={dexChainConfig?.explorerBaseUrl}
-        />
-      </div>
+      {recentSwaps.length > 0 && (
+        <div className="mt-4">
+          <RecentSwaps
+            items={recentSwaps.slice(0, 8)}
+            chainId={supportedFormChainId}
+            explorerBaseUrl={dexChainConfig?.explorerBaseUrl}
+          />
+        </div>
+      )}
 
       <TokenSelectDialog
         open={tokenDialogOpen}
