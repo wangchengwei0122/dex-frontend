@@ -127,12 +127,8 @@ export function TokensList({ tokens, chainId }: TokensListProps) {
 
   const handleSelect = useCallback(
     (token: TokenConfig) => {
-      const params = new URLSearchParams()
-      params.set("to", token.symbol)
-      if (chainId) {
-        params.set("chainId", String(chainId))
-      }
-      router.push(`/trade?${params.toString()}`)
+      const targetChainId = chainId ?? token.chainId
+      router.push(`/token/${targetChainId}/${token.symbol}`)
     },
     [chainId, router]
   )
