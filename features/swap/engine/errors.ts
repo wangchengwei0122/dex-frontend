@@ -165,6 +165,10 @@ export function deriveSwapError(params: DeriveSwapErrorParams): SwapError {
 
   // 4) 数量非法
   const amountStr = fromAmount?.trim()
+  if (!amountStr) {
+    return NO_ERROR
+  }
+
   const hasInvalidAmount =
     !amountStr ||
     amountStr === "0" ||

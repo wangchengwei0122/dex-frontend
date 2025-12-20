@@ -38,23 +38,15 @@ export function SwapFooter({
     }
 
     if (quoteError) {
-      return (
-        <span className="text-[var(--error-text)]">
-          {quoteError}
-        </span>
-      )
+      return <span className="text-[var(--error-text)]">{quoteError}</span>
     }
 
-    return (
-      <span className="text-zinc-400">
-        {rateText || '—'}
-      </span>
-    )
+    return <span className="text-zinc-400">{rateText || ""}</span>
   }
 
   const renderQuoteDetails = () => {
     if (!reviewParams || !toToken) {
-      return <span className="text-[11px] text-zinc-500">Enter an amount</span>
+      return <span className="text-[11px] text-zinc-500"></span>
     }
 
     return (
@@ -86,9 +78,7 @@ export function SwapFooter({
     return (
       <div className="flex justify-between text-xs">
         <span className="text-zinc-400">Price impact</span>
-        <span className={highImpact ? "text-red-500" : "text-zinc-300"}>
-          -{displayValue}%
-        </span>
+        <span className={highImpact ? "text-red-500" : "text-zinc-300"}>-{displayValue}%</span>
       </div>
     )
   }
