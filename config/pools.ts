@@ -8,6 +8,13 @@ export interface PoolConfig {
   pairAddress: Address
   token0: TokenConfig
   token1: TokenConfig
+  /**
+   * canonical 表示“资产身份层面的主网 Pair”，仅用于标识，不参与合约交互
+   */
+  canonical?: {
+    chainId: number
+    pairAddress: Address
+  }
   feeBps?: number
   isFeatured?: boolean
   priority?: number
@@ -74,6 +81,10 @@ export const POOLS_BY_CHAIN_ID: PoolsByChainId = {
       pairAddress: "0x72e46e15ef83c896de44B1874B4AF7dDAB5b4F74" as Address,
       token0: SEPOLIA_USDC,
       token1: SEPOLIA_WETH,
+      canonical: {
+        chainId: 1,
+        pairAddress: "0xB4e16d0168e52d35CaCD2c6185b44281Ec28C9Dc" as Address,
+      },
       feeBps: 30,
       priority: 1,
       isFeatured: true,
@@ -84,6 +95,10 @@ export const POOLS_BY_CHAIN_ID: PoolsByChainId = {
       pairAddress: "0xCBDB9cb0669906C8B12211824b4f069d183155Ff" as Address,
       token0: SEPOLIA_USDT,
       token1: SEPOLIA_WETH,
+      canonical: {
+        chainId: 1,
+        pairAddress: "0x0d4a11d5EEaaC28EC3F61d100daF4d40471f1852" as Address,
+      },
       feeBps: 30,
       priority: 2,
     },
@@ -93,6 +108,10 @@ export const POOLS_BY_CHAIN_ID: PoolsByChainId = {
       pairAddress: "0x81e7162b97D8448b97760a8FD3fE8d17ea91d99c" as Address,
       token0: SEPOLIA_WBTC,
       token1: SEPOLIA_WETH,
+      canonical: {
+        chainId: 1,
+        pairAddress: "0xBb2b8038a1640196FbE3e38816F3e67Cba72D940" as Address,
+      },
       feeBps: 30,
       priority: 3,
     },

@@ -14,6 +14,13 @@ export interface TokenConfig {
   logoURI?: string
   isNative?: boolean // 原生币（ETH）标记
   wrappedAddress?: Address // 对应 WETH 地址（可选）
+  /**
+   * canonical 用于标记“资产身份”，永远不参与交易参数，仅用于跨链同资产识别
+   */
+  canonical?: {
+    chainId: number
+    address: Address
+  }
   priority?: number // 数字越小优先级越高
   isStable?: boolean // 稳定币标记
   tags?: string[]
