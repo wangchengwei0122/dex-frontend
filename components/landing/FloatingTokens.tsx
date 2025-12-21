@@ -19,9 +19,14 @@ interface Bubble {
   rotateTo: number
   duration: number
   delay: number
+  revealDelay: number
 }
 
-export function FloatingTokens() {
+interface FloatingTokensProps {
+  entered?: boolean
+}
+
+export function FloatingTokens({ entered = true }: FloatingTokensProps) {
   const chainId = useChainId()
   const isClient = useSyncExternalStore(
     useCallback(() => () => {}, []),
@@ -75,6 +80,9 @@ export function FloatingTokens() {
       const dy = pseudoRandom(index * 5 + 4) * maxOffset * randomSign(index * 7 + 5)
       const rotateFrom = pseudoRandom(index * 11 + 1) * 8 * randomSign(index * 13 + 1)
       const rotateTo = pseudoRandom(index * 11 + 2) * 8 * randomSign(index * 13 + 3)
+      const baseRevealDelay = index * 90
+      const jitter = (pseudoRandom(index * 41 + 7) - 0.5) * 60 // -30ms ~ +30ms
+      const revealDelay = Math.max(0, baseRevealDelay + jitter)
       const maxAttempts = 12
 
       const pickZone = (attempt: number) => {
@@ -107,6 +115,7 @@ export function FloatingTokens() {
         rotateTo,
         duration: 18 + pseudoRandom(index * 23 + 3) * 12, // 18s - 30s
         delay: pseudoRandom(index * 29 + 4) * 8,
+        revealDelay,
       }
     })
   }, [chainId, isClient])
@@ -116,7 +125,7 @@ export function FloatingTokens() {
   return (
     <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
       {bubbles.map((b) => (
-        <TokenBubble key={b.id} bubble={b} chainId={chainId} />
+        <TokenBubble key={b.id} bubble={b} chainId={chainId} entered={entered} />
       ))}
     </div>
   )
@@ -125,6 +134,7 @@ export function FloatingTokens() {
 interface TokenBubbleProps {
   bubble: Bubble
   chainId: number | undefined
+  entered: boolean
 }
 
 type BubbleStyle = CSSProperties & {
@@ -132,9 +142,11 @@ type BubbleStyle = CSSProperties & {
   "--move-y"?: string
   "--rotate-from"?: string
   "--rotate-to"?: string
+  transitionDelay?: string
+  transitionDuration?: string
 }
 
-function TokenBubble({ bubble, chainId }: TokenBubbleProps) {
+function TokenBubble({ bubble, chainId, entered }: TokenBubbleProps) {
   const router = useRouter()
 
   const style: BubbleStyle = {
@@ -147,6 +159,8 @@ function TokenBubble({ bubble, chainId }: TokenBubbleProps) {
     "--move-y": `${bubble.dy}px`,
     "--rotate-from": `${bubble.rotateFrom}deg`,
     "--rotate-to": `${bubble.rotateTo}deg`,
+    transitionDelay: `${Math.round(bubble.revealDelay)}ms`,
+    transitionDuration: "950ms",
   }
 
   const handleClick = () => {
@@ -167,7 +181,9 @@ function TokenBubble({ bubble, chainId }: TokenBubbleProps) {
       tabIndex={0}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
-      className="group pointer-events-auto absolute flex items-center justify-center rounded-full shadow-[0_0_10px_rgba(0,0,0,0.45)] filter blur-sm opacity-70 transition-all duration-300 hover:blur-none hover:opacity-100 hover:scale-[1.1] focus:outline-none focus:blur-none focus:opacity-100 focus:scale-[1.1] cursor-pointer"
+      className={`group pointer-events-auto absolute flex items-center justify-center rounded-full shadow-[0_0_10px_rgba(0,0,0,0.45)] transition-all ease-[cubic-bezier(.18,1,.21,1)] hover:blur-none hover:opacity-100 hover:scale-[1.1] focus:outline-none focus:blur-none focus:opacity-100 focus:scale-[1.1] cursor-pointer ${
+        entered ? "blur-sm opacity-70 translate-y-0 scale-100" : "blur-2xl opacity-0 translate-y-6 scale-90"
+      }`}
       style={style}
     >
       {bubble.logoURI ? (
